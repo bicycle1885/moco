@@ -17,8 +17,8 @@ import (
 	"github.com/bicycle1885/moco/internal/config"
 )
 
-// ArchiveOptions defines archiving options
-type ArchiveOptions struct {
+// Options defines archiving options
+type Options struct {
 	OlderThan   string // Archive experiments older than duration (e.g., "30d")
 	Status      string // Filter by status (success, failure, all)
 	Format      string // Archive format (zip, tar.gz)
@@ -39,7 +39,7 @@ type ExperimentInfo struct {
 }
 
 // Run archives experiments
-func Run(opts ArchiveOptions) error {
+func Run(opts Options) error {
 	// Get config
 	cfg := config.GetConfig()
 

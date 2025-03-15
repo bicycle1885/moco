@@ -26,7 +26,7 @@ An archive index is maintained for easy reference to archived experiments.`,
 			dryRun, _ := cmd.Flags().GetBool("dry-run")
 
 			// Archive experiments with provided options
-			return archive.Run(archive.ArchiveOptions{
+			return archive.Run(archive.Options{
 				OlderThan:   olderThan,
 				Status:      status,
 				Format:      format,

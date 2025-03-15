@@ -15,8 +15,8 @@ import (
 	"github.com/bicycle1885/moco/internal/git"
 )
 
-// StatusOptions defines status display options
-type StatusOptions struct {
+// Options defines status display options
+type Options struct {
 	DetailLevel string // Level of detail to show (minimal, normal, full)
 	Format      string // Output format (text, json, markdown)
 }
@@ -46,7 +46,7 @@ type RunInfo struct {
 }
 
 // Show displays project status
-func Show(opts StatusOptions) error {
+func Show(opts Options) error {
 	// Get config and repository status
 	cfg := config.GetConfig()
 	repo, err := git.GetRepoStatus()

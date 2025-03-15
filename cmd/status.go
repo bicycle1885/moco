@@ -24,7 +24,7 @@ The level of detail and output format can be customized.`,
 			format, _ := cmd.Flags().GetString("format")
 
 			// Show project status
-			return status.Show(status.StatusOptions{
+			return status.Show(status.Options{
 				DetailLevel: detail,
 				Format:      format,
 			})

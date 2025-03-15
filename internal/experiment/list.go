@@ -29,8 +29,8 @@ type ListOptions struct {
 	Limit   int    // Limit number of results
 }
 
-// ExperimentInfo holds information about an experiment
-type ExperimentInfo struct {
+// Info holds information about an experiment
+type Info struct {
 	Path         string    `json:"path"`
 	Directory    string    `json:"directory"`
 	Timestamp    time.Time `json:"timestamp"`
@@ -91,8 +91,8 @@ func List(opts ListOptions) error {
 }
 
 // findExperiments scans the base directory for experiment directories
-func findExperiments(baseDir string) ([]ExperimentInfo, error) {
-	var experiments []ExperimentInfo
+func findExperiments(baseDir string) ([]Info, error) {
+	var experiments []Info
 
 	// Ensure base directory exists
 	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
@@ -131,7 +131,7 @@ func findExperiments(baseDir string) ([]ExperimentInfo, error) {
 		}
 
 		// Create experiment info
-		exp := ExperimentInfo{
+		exp := Info{
 			Path:       filepath.Join(baseDir, name),
 			Directory:  name,
 			Timestamp:  timestamp,
@@ -154,7 +154,7 @@ func findExperiments(baseDir string) ([]ExperimentInfo, error) {
 }
 
 // parseSummary extracts information from a summary.md file
-func parseSummary(exp *ExperimentInfo, summaryPath string) error {
+func parseSummary(exp *Info, summaryPath string) error {
 	// Open summary file
 	file, err := os.Open(summaryPath)
 	if err != nil {
@@ -240,8 +240,8 @@ func parseDurationToSeconds(duration string) float64 {
 }
 
 // filterExperiments applies filters to experiment results
-func filterExperiments(experiments []ExperimentInfo, opts ListOptions) ([]ExperimentInfo, error) {
-	var filtered []ExperimentInfo
+func filterExperiments(experiments []Info, opts ListOptions) ([]Info, error) {
+	var filtered []Info
 
 	// Parse 'since' filter if provided
 	var sinceTime time.Time
@@ -328,7 +328,7 @@ func parseDuration(s string) (time.Duration, error) {
 }
 
 // sortExperiments sorts experiments based on criteria
-func sortExperiments(experiments []ExperimentInfo, sortBy string, reverse bool) {
+func sortExperiments(experiments []Info, sortBy string, reverse bool) {
 	// Define sort function based on criteria
 	var sortFunc func(i, j int) bool
 
@@ -368,7 +368,7 @@ func sortExperiments(experiments []ExperimentInfo, sortBy string, reverse bool) 
 }
 
 // outputTable formats and displays experiments as a table
-func outputTable(experiments []ExperimentInfo) error {
+func outputTable(experiments []Info) error {
 	// Create a tabwriter for aligned columns
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
@@ -411,11 +411,11 @@ func outputTable(experiments []ExperimentInfo) error {
 }
 
 // outputJSON formats and displays experiments as JSON
-func outputJSON(experiments []ExperimentInfo) error {
+func outputJSON(experiments []Info) error {
 	// Create output structure
 	output := struct {
-		Experiments []ExperimentInfo `json:"experiments"`
-		Count       int              `json:"count"`
+		Experiments []Info `json:"experiments"`
+		Count       int    `json:"count"`
 	}{
 		Experiments: experiments,
 		Count:       len(experiments),
@@ -433,7 +433,7 @@ func outputJSON(experiments []ExperimentInfo) error {
 }
 
 // outputCSV formats and displays experiments as CSV
-func outputCSV(experiments []ExperimentInfo) error {
+func outputCSV(experiments []Info) error {
 	// Create a CSV writer
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
