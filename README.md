@@ -154,4 +154,4 @@ Inside each directory:
 
 ## License
 
-[License information]
+The MIT License
