@@ -9,8 +9,9 @@ import (
 
 func init() {
 	runCmd := &cobra.Command{
-		Use:   "run [command]",
-		Short: "Run a command in an experiment directory with metadata tracking",
+		Use:     "run [command]",
+		Aliases: []string{"r"},
+		Short:   "Run a command in an experiment directory with metadata tracking",
 		Long: `Run a command with full reproducibility tracking.
 
 This command will:
