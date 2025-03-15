@@ -1,4 +1,3 @@
-// cmd/status.go
 package cmd
 
 import (

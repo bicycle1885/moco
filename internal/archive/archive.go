@@ -1,4 +1,3 @@
-// internal/archive/archive.go
 package archive
 
 import (

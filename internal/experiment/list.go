@@ -1,4 +1,3 @@
-// internal/experiment/list.go
 package experiment
 
 import (

@@ -1,4 +1,3 @@
-// cmd/archive.go
 package cmd
 
 import (

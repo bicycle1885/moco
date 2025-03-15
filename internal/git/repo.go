@@ -1,4 +1,3 @@
-// internal/git/repo.go
 package git
 
 import (

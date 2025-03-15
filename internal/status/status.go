@@ -1,4 +1,3 @@
-// internal/status/status.go
 package status
 
 import (

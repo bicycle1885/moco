@@ -1,4 +1,3 @@
-// cmd/list.go
 package cmd
 
 import (

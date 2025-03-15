@@ -1,4 +1,3 @@
-// cmd/run.go
 package cmd
 
 import (

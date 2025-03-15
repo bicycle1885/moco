@@ -1,4 +1,3 @@
-// internal/experiment/run.go
 package experiment
 
 import (
