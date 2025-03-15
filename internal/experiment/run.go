@@ -220,12 +220,12 @@ func writeSummary(path string, startTime time.Time, repo git.RepoStatus,
 
 	// Metadata
 	b.WriteString("## Metadata\n")
-	fmt.Fprintf(&b, "- **Execution datetime:** %s\n", startTime.Format("2006-01-02T15:04:05"))
-	fmt.Fprintf(&b, "- **Branch:** `%s`\n", repo.Branch)
-	fmt.Fprintf(&b, "- **Commit hash:** `%s`\n", repo.FullHash)
-	fmt.Fprintf(&b, "- **Command:** `%s`\n", commandStr)
-	fmt.Fprintf(&b, "- **Hostname:** `%s`\n", hostname)
-	fmt.Fprintf(&b, "- **Working directory:** `%s`\n", expDir)
+	fmt.Fprintf(&b, "- **Execution datetime**: %s\n", startTime.Format("2006-01-02T15:04:05"))
+	fmt.Fprintf(&b, "- **Branch**: `%s`\n", repo.Branch)
+	fmt.Fprintf(&b, "- **Commit hash**: `%s`\n", repo.FullHash)
+	fmt.Fprintf(&b, "- **Command**: `%s`\n", commandStr)
+	fmt.Fprintf(&b, "- **Hostname**: `%s`\n", hostname)
+	fmt.Fprintf(&b, "- **Working directory**: `%s`\n", expDir)
 
 	// Commit details
 	b.WriteString("\n## Latest Commit Details\n")
@@ -296,9 +296,9 @@ func appendSummaryResults(path string, endTime time.Time, duration time.Duration
 	// Create the results section
 	results := fmt.Sprintf(`
 ## Execution Results
-- **Execution finished:** %s
-- **Execution time:** %s
-- **Exit status:** %d
+- **Execution finished**: %s
+- **Execution time**: %s
+- **Exit status**: %d
 `,
 		endTime.Format("2006-01-02T15:04:05"),
 		durationStr,

@@ -168,7 +168,7 @@ func parseSummary(exp *Info, summaryPath string) error {
 		line := scanner.Text()
 
 		// Extract command
-		if strings.Contains(line, "**Command:**") {
+		if strings.Contains(line, "**Command**:") {
 			parts := strings.SplitN(line, "`", 3)
 			if len(parts) >= 2 {
 				exp.Command = parts[1]
@@ -176,7 +176,7 @@ func parseSummary(exp *Info, summaryPath string) error {
 		}
 
 		// Check for exit status
-		if strings.Contains(line, "**Exit status:**") {
+		if strings.Contains(line, "**Exit status**:") {
 			exp.IsRunning = false
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) >= 2 {
@@ -188,7 +188,7 @@ func parseSummary(exp *Info, summaryPath string) error {
 		}
 
 		// Extract duration
-		if strings.Contains(line, "**Execution time:**") {
+		if strings.Contains(line, "**Execution time**:") {
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) >= 2 {
 				exp.Duration = strings.TrimSpace(parts[1])

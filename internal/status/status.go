@@ -179,7 +179,7 @@ func parseRunInfo(summaryPath, dirName string, matches []string) (RunInfo, error
 		line := scanner.Text()
 
 		// Extract command
-		if strings.Contains(line, "**Command:**") {
+		if strings.Contains(line, "**Command**:") && !commandFound {
 			parts := strings.SplitN(line, "`", 3)
 			if len(parts) >= 2 {
 				runInfo.Command = parts[1]
@@ -188,7 +188,7 @@ func parseRunInfo(summaryPath, dirName string, matches []string) (RunInfo, error
 		}
 
 		// Check if execution has finished
-		if strings.Contains(line, "**Exit status:**") {
+		if strings.Contains(line, "**Exit status**:") {
 			runInfo.IsRunning = false
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) >= 2 {
@@ -200,7 +200,7 @@ func parseRunInfo(summaryPath, dirName string, matches []string) (RunInfo, error
 		}
 
 		// Extract end time
-		if strings.Contains(line, "**Execution finished:**") {
+		if strings.Contains(line, "**Execution finished**:") {
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) >= 2 {
 				endTime, err := time.Parse("2006-01-02T15:04:05", strings.TrimSpace(parts[1]))
@@ -211,7 +211,7 @@ func parseRunInfo(summaryPath, dirName string, matches []string) (RunInfo, error
 		}
 
 		// Extract duration
-		if strings.Contains(line, "**Execution time:**") {
+		if strings.Contains(line, "**Execution time**:") {
 			parts := strings.SplitN(line, ":", 2)
 			if len(parts) >= 2 {
 				runInfo.Duration = strings.TrimSpace(parts[1])
@@ -358,21 +358,21 @@ func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel s
 	fmt.Println("# Moco Project Status")
 
 	fmt.Println("\n## Git Repository Status")
-	fmt.Printf("- **Branch:** `%s`\n", repo.Branch)
-	fmt.Printf("- **Commit:** `%s`\n", repo.ShortHash)
+	fmt.Printf("- **Branch**: `%s`\n", repo.Branch)
+	fmt.Printf("- **Commit**: `%s`\n", repo.ShortHash)
 	if repo.IsDirty {
-		fmt.Println("- **Status:** Dirty (has uncommitted changes)")
+		fmt.Println("- **Status**: Dirty (has uncommitted changes)")
 	} else {
-		fmt.Println("- **Status:** Clean")
+		fmt.Println("- **Status**: Clean")
 	}
 
 	// Output basic project stats
 	fmt.Println("\n## Project Statistics")
-	fmt.Printf("- **Total experiments:** %d\n", stats.TotalExperiments)
-	fmt.Printf("- **Success rate:** %.1f%% (%d/%d)\n",
+	fmt.Printf("- **Total experiments**: %d\n", stats.TotalExperiments)
+	fmt.Printf("- **Success rate**: %.1f%% (%d/%d)\n",
 		percentOrZero(stats.SuccessCount, stats.SuccessCount+stats.FailureCount),
 		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
-	fmt.Printf("- **Disk usage:** %s\n", stats.DiskUsage)
+	fmt.Printf("- **Disk usage**: %s\n", stats.DiskUsage)
 
 	// Show running experiments if any
 	if stats.RunningCount > 0 {
@@ -383,9 +383,9 @@ func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel s
 				if run.IsRunning {
 					elapsed := time.Since(run.StartTime).Round(time.Second)
 					fmt.Printf("\n### %s\n", run.Directory)
-					fmt.Printf("- **Running for:** %s\n", elapsed)
-					fmt.Printf("- **Command:** `%s`\n", run.Command)
-					fmt.Printf("- **Branch:** `%s`\n", run.Branch)
+					fmt.Printf("- **Running for**: %s\n", elapsed)
+					fmt.Printf("- **Command**: `%s`\n", run.Command)
+					fmt.Printf("- **Branch**: `%s`\n", run.Branch)
 				}
 			}
 		}
@@ -401,10 +401,10 @@ func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel s
 					status = fmt.Sprintf("Failed (exit: %d)", run.ExitStatus)
 				}
 				fmt.Printf("\n### %s\n", run.Directory)
-				fmt.Printf("- **Status:** %s\n", status)
-				fmt.Printf("- **Command:** `%s`\n", run.Command)
-				fmt.Printf("- **Duration:** %s\n", run.Duration)
-				fmt.Printf("- **Branch:** `%s`\n", run.Branch)
+				fmt.Printf("- **Status**: %s\n", status)
+				fmt.Printf("- **Command**: `%s`\n", run.Command)
+				fmt.Printf("- **Duration**: %s\n", run.Duration)
+				fmt.Printf("- **Branch**: `%s`\n", run.Branch)
 			}
 		}
 	}
@@ -413,9 +413,9 @@ func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel s
 	if detailLevel == "full" {
 		fmt.Println("\n## Detailed Git Information")
 		if repo.CommitMessage != "" {
-			fmt.Printf("- **Last commit:** %s\n", strings.Split(repo.CommitMessage, "\n")[0])
-			fmt.Printf("- **Author:** %s\n", repo.CommitAuthor)
-			fmt.Printf("- **Date:** %s\n", repo.CommitDate.Format(time.RFC1123))
+			fmt.Printf("- **Last commit**: %s\n", strings.Split(repo.CommitMessage, "\n")[0])
+			fmt.Printf("- **Author**: %s\n", repo.CommitAuthor)
+			fmt.Printf("- **Date**: %s\n", repo.CommitDate.Format(time.RFC1123))
 		}
 	}
 
