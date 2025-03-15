@@ -35,7 +35,7 @@ type Config struct {
 
 var globalConfig Config
 
-// InitConfig loads configuration from files and environment
+// InitConfig loads configuration from files
 func InitConfig() error {
 	// Set defaults
 	setDefaults()
@@ -57,9 +57,6 @@ func InitConfig() error {
 			}
 		}
 	}
-
-	// Apply environment variable overrides
-	applyEnvOverrides()
 
 	return nil
 }
@@ -98,14 +95,4 @@ func loadConfigFile(path string) error {
 	}
 
 	return toml.Unmarshal(data, &globalConfig)
-}
-
-// applyEnvOverrides applies environment variable overrides to configuration
-func applyEnvOverrides() {
-	// Override base directory
-	if dir := os.Getenv("MOCO_PATHS_BASE_DIR"); dir != "" {
-		globalConfig.Paths.BaseDir = dir
-	}
-
-	// Other environment overrides would go here
 }
