@@ -1,0 +1,19 @@
+# .moco.toml
+
+[paths]
+base_dir = "runs"
+summary_file = "Summary.md"
+stdout_file = "stdout.log"
+stderr_file = "stderr.log"
+
+[run]
+default_force = false
+default_cleanup_on_fail = false
+default_no_pushd = false
+
+[git]
+require_clean = true
+
+[archive]
+format = "tar.gz"
+older_than = "30d"
