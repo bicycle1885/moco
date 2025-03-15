@@ -73,7 +73,7 @@ func GetConfig() Config {
 func setDefaults() {
 	// Paths
 	globalConfig.Paths.BaseDir = "runs"
-	globalConfig.Paths.SummaryFile = "Summary.md"
+	globalConfig.Paths.SummaryFile = "summary.md"
 	globalConfig.Paths.StdoutFile = "stdout.log"
 	globalConfig.Paths.StderrFile = "stderr.log"
 

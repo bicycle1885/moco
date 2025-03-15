@@ -168,7 +168,7 @@ func sanitizeName(name string) string {
 	return r.Replace(name)
 }
 
-// writeSummary creates the initial Summary.md file with experiment metadata
+// writeSummary creates the initial summary.md file with experiment metadata
 func writeSummary(path string, startTime time.Time, repo git.RepoStatus,
 	command []string, expDir string) error {
 	// Create the summary file
@@ -281,7 +281,7 @@ func formatGitStatus(repo git.RepoStatus) string {
 	return status
 }
 
-// appendSummaryResults appends execution results to the Summary.md
+// appendSummaryResults appends execution results to the summary.md
 func appendSummaryResults(path string, endTime time.Time, duration time.Duration,
 	exitCode int, interrupted bool) error {
 	// Open file in append mode

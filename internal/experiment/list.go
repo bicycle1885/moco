@@ -154,7 +154,7 @@ func findExperiments(baseDir string) ([]ExperimentInfo, error) {
 	return experiments, nil
 }
 
-// parseSummary extracts information from a Summary.md file
+// parseSummary extracts information from a summary.md file
 func parseSummary(exp *ExperimentInfo, summaryPath string) error {
 	// Open summary file
 	file, err := os.Open(summaryPath)

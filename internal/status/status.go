@@ -112,7 +112,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 		stats.TotalExperiments++
 
 		// Parse summary file for status
-		summaryPath := filepath.Join(path, "Summary.md")
+		summaryPath := filepath.Join(path, "summary.md")
 		runInfo, err := parseRunInfo(summaryPath, dirName, matches)
 		if err != nil {
 			// If we can't parse the summary, assume it's still running
@@ -148,7 +148,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 	return stats, nil
 }
 
-// parseRunInfo extracts info from a Summary.md file
+// parseRunInfo extracts info from a summary.md file
 func parseRunInfo(summaryPath, dirName string, matches []string) (RunInfo, error) {
 	runInfo := RunInfo{
 		Directory:  dirName,

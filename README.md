@@ -102,7 +102,7 @@ Example configuration:
 
 [paths]
 base_dir = "runs"
-summary_file = "Summary.md"
+summary_file = "summary.md"
 stdout_file = "stdout.log"
 stderr_file = "stderr.log"
 
@@ -141,7 +141,7 @@ Each experiment is stored in a directory with the following format:
 `runs/YYYY-MM-DDTHH:MM:SS.sss_branch_commithash/`
 
 Inside each directory:
-- `Summary.md` - Metadata and results
+- `summary.md` - Metadata and results
 - `stdout.log` - Standard output
 - `stderr.log` - Standard error
 

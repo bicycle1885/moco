@@ -185,7 +185,7 @@ func findExperimentsToArchive(baseDir string, cutoff time.Time, statusFilter str
 		}
 
 		// Parse summary file to check if it's finished and the exit status
-		summaryPath := filepath.Join(expInfo.Path, "Summary.md")
+		summaryPath := filepath.Join(expInfo.Path, "summary.md")
 		if err := parseExperimentStatus(&expInfo, summaryPath); err != nil {
 			// If we can't parse, skip based on filter
 			if statusFilter != "" && statusFilter != "all" {
@@ -212,7 +212,7 @@ func findExperimentsToArchive(baseDir string, cutoff time.Time, statusFilter str
 	return results, nil
 }
 
-// parseExperimentStatus extracts status information from a Summary.md file
+// parseExperimentStatus extracts status information from a summary.md file
 func parseExperimentStatus(expInfo *ExperimentInfo, summaryPath string) error {
 	// Default to running
 	expInfo.IsFinished = false

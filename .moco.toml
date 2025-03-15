@@ -2,7 +2,7 @@
 
 [paths]
 base_dir = "runs"
-summary_file = "Summary.md"
+summary_file = "summary.md"
 stdout_file = "stdout.log"
 stderr_file = "stderr.log"
 
