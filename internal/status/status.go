@@ -1,18 +1,17 @@
 package status
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/git"
+	"github.com/bicycle1885/moco/internal/utils"
 )
 
 // Options defines status display options
@@ -23,26 +22,13 @@ type Options struct {
 
 // ProjectStats contains project statistics
 type ProjectStats struct {
-	TotalExperiments int       `json:"total_experiments"`
-	SuccessCount     int       `json:"success_count"`
-	FailureCount     int       `json:"failure_count"`
-	RunningCount     int       `json:"running_count"`
-	DiskUsage        string    `json:"disk_usage"`
-	DiskUsageBytes   int64     `json:"disk_usage_bytes"`
-	RecentRuns       []RunInfo `json:"recent_runs,omitempty"`
-}
-
-// RunInfo contains information about a specific run
-type RunInfo struct {
-	Directory  string    `json:"directory"`
-	Command    string    `json:"command"`
-	StartTime  time.Time `json:"start_time"`
-	EndTime    time.Time `json:"end_time,omitempty"`
-	Duration   string    `json:"duration,omitempty"`
-	ExitStatus int       `json:"exit_status"`
-	IsRunning  bool      `json:"is_running"`
-	Branch     string    `json:"branch"`
-	CommitHash string    `json:"commit_hash"`
+	TotalExperiments int             `json:"total_experiments"`
+	SuccessCount     int             `json:"success_count"`
+	FailureCount     int             `json:"failure_count"`
+	RunningCount     int             `json:"running_count"`
+	DiskUsage        string          `json:"disk_usage"`
+	DiskUsageBytes   int64           `json:"disk_usage_bytes"`
+	RecentRuns       []utils.RunInfo `json:"recent_runs,omitempty"`
 }
 
 // Show displays project status
@@ -74,7 +60,7 @@ func Show(opts Options) error {
 // getProjectStats computes statistics about experiments
 func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, error) {
 	stats := ProjectStats{
-		RecentRuns: []RunInfo{},
+		RecentRuns: []utils.RunInfo{},
 	}
 
 	// Ensure base directory exists
@@ -112,8 +98,9 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 
 		// Parse summary file for status
 		summaryPath := filepath.Join(path, "summary.md")
-		runInfo, err := parseRunInfo(summaryPath, dirName, matches)
+		runInfo, err := utils.ParseRunInfo(summaryPath)
 		if err != nil {
+			// TODO: fix this
 			// If we can't parse the summary, assume it's still running
 			stats.RunningCount++
 			return nil
@@ -145,85 +132,6 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 	stats.DiskUsage = formatSize(totalSize)
 
 	return stats, nil
-}
-
-// parseRunInfo extracts info from a summary.md file
-func parseRunInfo(summaryPath, dirName string, matches []string) (RunInfo, error) {
-	runInfo := RunInfo{
-		Directory:  dirName,
-		Branch:     matches[2],
-		CommitHash: matches[3],
-		IsRunning:  true, // Assume running until we find evidence it's finished
-	}
-
-	// Parse timestamp from directory name
-	timestamp := matches[1]
-	startTime, err := time.Parse("2006-01-02T15:04:05.000", timestamp)
-	if err != nil {
-		return runInfo, fmt.Errorf("unable to parse timestamp: %w", err)
-	}
-	runInfo.StartTime = startTime
-
-	// Open summary file
-	file, err := os.Open(summaryPath)
-	if err != nil {
-		return runInfo, fmt.Errorf("failed to open summary file: %w", err)
-	}
-	defer file.Close()
-
-	// Scan for relevant information
-	scanner := bufio.NewScanner(file)
-	var commandFound bool
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Extract command
-		if strings.Contains(line, "**Command**:") && !commandFound {
-			parts := strings.SplitN(line, "`", 3)
-			if len(parts) >= 2 {
-				runInfo.Command = parts[1]
-				commandFound = true
-			}
-		}
-
-		// Check if execution has finished
-		if strings.Contains(line, "**Exit status**:") {
-			runInfo.IsRunning = false
-			parts := strings.SplitN(line, ":", 2)
-			if len(parts) >= 2 {
-				status, err := strconv.Atoi(strings.TrimSpace(parts[1]))
-				if err == nil {
-					runInfo.ExitStatus = status
-				}
-			}
-		}
-
-		// Extract end time
-		if strings.Contains(line, "**Execution finished**:") {
-			parts := strings.SplitN(line, ":", 2)
-			if len(parts) >= 2 {
-				endTime, err := time.Parse("2006-01-02T15:04:05", strings.TrimSpace(parts[1]))
-				if err == nil {
-					runInfo.EndTime = endTime
-				}
-			}
-		}
-
-		// Extract duration
-		if strings.Contains(line, "**Execution time**:") {
-			parts := strings.SplitN(line, ":", 2)
-			if len(parts) >= 2 {
-				runInfo.Duration = strings.TrimSpace(parts[1])
-			}
-		}
-	}
-
-	if !commandFound {
-		return runInfo, fmt.Errorf("command not found in summary")
-	}
-
-	return runInfo, nil
 }
 
 // formatSize formats a file size in bytes to human-readable format

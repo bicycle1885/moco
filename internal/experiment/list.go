@@ -1,20 +1,20 @@
 package experiment
 
 import (
-	"bufio"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
 
 	"github.com/bicycle1885/moco/internal/config"
+	"github.com/bicycle1885/moco/internal/utils"
+	"golang.org/x/exp/slices"
 )
 
 // ListOptions defines filtering and display options
@@ -27,21 +27,6 @@ type ListOptions struct {
 	Since   string // Filter by date (e.g., "7d" for last 7 days)
 	Command string // Filter by command pattern
 	Limit   int    // Limit number of results
-}
-
-// Info holds information about an experiment
-type Info struct {
-	Path         string    `json:"path"`
-	Directory    string    `json:"directory"`
-	Timestamp    time.Time `json:"timestamp"`
-	Branch       string    `json:"branch"`
-	CommitHash   string    `json:"commit_hash"`
-	Command      string    `json:"command"`
-	ExitStatus   int       `json:"exit_status"`
-	Duration     string    `json:"duration"`
-	DurationSecs float64   `json:"duration_secs"`
-	Interrupted  bool      `json:"interrupted"`
-	IsRunning    bool      `json:"is_running"`
 }
 
 // List displays and filters experiments
@@ -91,8 +76,8 @@ func List(opts ListOptions) error {
 }
 
 // findExperiments scans the base directory for experiment directories
-func findExperiments(baseDir string) ([]Info, error) {
-	var experiments []Info
+func findExperiments(baseDir string) ([]utils.RunInfo, error) {
+	var experiments []utils.RunInfo
 
 	// Ensure base directory exists
 	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
@@ -124,124 +109,23 @@ func findExperiments(baseDir string) ([]Info, error) {
 			continue // Not an experiment directory
 		}
 
-		// Parse timestamp from directory name
-		timestamp, err := time.Parse("2006-01-02T15:04:05.000", matches[1])
-		if err != nil {
-			continue // Invalid timestamp format
-		}
-
-		// Create experiment info
-		exp := Info{
-			Path:       filepath.Join(baseDir, name),
-			Directory:  name,
-			Timestamp:  timestamp,
-			Branch:     matches[2],
-			CommitHash: matches[3],
-			IsRunning:  true, // Assume running by default
-		}
-
 		// Parse summary file
-		summaryPath := filepath.Join(exp.Path, cfg.Paths.SummaryFile)
-		if err := parseSummary(&exp, summaryPath); err != nil {
-			// If we can't parse summary, use defaults
-			exp.Command = "Unknown"
+		summaryPath := filepath.Join(baseDir, name, cfg.Paths.SummaryFile)
+		runInfo, err := utils.ParseRunInfo(summaryPath)
+		if err != nil {
+			// TODO: Log error and continue
+			return nil, fmt.Errorf("failed to parse summary file: %w", err)
 		}
 
-		experiments = append(experiments, exp)
+		experiments = append(experiments, runInfo)
 	}
 
 	return experiments, nil
 }
 
-// parseSummary extracts information from a summary.md file
-func parseSummary(exp *Info, summaryPath string) error {
-	// Open summary file
-	file, err := os.Open(summaryPath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Scan for relevant information
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Extract command
-		if strings.Contains(line, "**Command**:") {
-			parts := strings.SplitN(line, "`", 3)
-			if len(parts) >= 2 {
-				exp.Command = parts[1]
-			}
-		}
-
-		// Check for exit status
-		if strings.Contains(line, "**Exit status**:") {
-			exp.IsRunning = false
-			parts := strings.SplitN(line, ":", 2)
-			if len(parts) >= 2 {
-				status, err := strconv.Atoi(strings.TrimSpace(parts[1]))
-				if err == nil {
-					exp.ExitStatus = status
-				}
-			}
-		}
-
-		// Extract duration
-		if strings.Contains(line, "**Execution time**:") {
-			parts := strings.SplitN(line, ":", 2)
-			if len(parts) >= 2 {
-				exp.Duration = strings.TrimSpace(parts[1])
-				// Try to parse duration in seconds for sorting
-				exp.DurationSecs = parseDurationToSeconds(exp.Duration)
-			}
-		}
-
-		// Check if interrupted
-		if strings.Contains(line, "**Terminated by user**") {
-			exp.Interrupted = true
-		}
-	}
-
-	return scanner.Err()
-}
-
-// parseDurationToSeconds converts a duration string like "1h 30m 45s" to seconds
-func parseDurationToSeconds(duration string) float64 {
-	// Pattern to extract hours, minutes, seconds
-	reHours := regexp.MustCompile(`(\d+)h`)
-	reMinutes := regexp.MustCompile(`(\d+)m`)
-	reSeconds := regexp.MustCompile(`(\d+)s`)
-
-	var total float64
-
-	// Extract hours
-	if matches := reHours.FindStringSubmatch(duration); len(matches) > 1 {
-		if hours, err := strconv.Atoi(matches[1]); err == nil {
-			total += float64(hours) * 3600
-		}
-	}
-
-	// Extract minutes
-	if matches := reMinutes.FindStringSubmatch(duration); len(matches) > 1 {
-		if minutes, err := strconv.Atoi(matches[1]); err == nil {
-			total += float64(minutes) * 60
-		}
-	}
-
-	// Extract seconds
-	if matches := reSeconds.FindStringSubmatch(duration); len(matches) > 1 {
-		if seconds, err := strconv.Atoi(matches[1]); err == nil {
-			total += float64(seconds)
-		}
-	}
-
-	return total
-}
-
 // filterExperiments applies filters to experiment results
-func filterExperiments(experiments []Info, opts ListOptions) ([]Info, error) {
-	var filtered []Info
+func filterExperiments(experiments []utils.RunInfo, opts ListOptions) ([]utils.RunInfo, error) {
+	var filtered []utils.RunInfo
 
 	// Parse 'since' filter if provided
 	var sinceTime time.Time
@@ -284,7 +168,7 @@ func filterExperiments(experiments []Info, opts ListOptions) ([]Info, error) {
 		}
 
 		// Filter by date
-		if !sinceTime.IsZero() && exp.Timestamp.Before(sinceTime) {
+		if !sinceTime.IsZero() && exp.StartTime.Before(sinceTime) {
 			continue
 		}
 
@@ -328,47 +212,85 @@ func parseDuration(s string) (time.Duration, error) {
 }
 
 // sortExperiments sorts experiments based on criteria
-func sortExperiments(experiments []Info, sortBy string, reverse bool) {
+func sortExperiments(experiments []utils.RunInfo, sortBy string, reverse bool) {
 	// Define sort function based on criteria
-	var sortFunc func(i, j int) bool
+	var sortFunc func(i, j utils.RunInfo) int
 
 	switch sortBy {
 	case "branch":
-		sortFunc = func(i, j int) bool {
-			return experiments[i].Branch < experiments[j].Branch
+		sortFunc = func(a, b utils.RunInfo) int {
+			return strings.Compare(a.Branch, b.Branch)
 		}
 	case "status":
-		sortFunc = func(i, j int) bool {
+		sortFunc = func(a, b utils.RunInfo) int {
 			// Sort by running/completed, then by exit status
-			if experiments[i].IsRunning != experiments[j].IsRunning {
-				return experiments[j].IsRunning // Running experiments first
+			if a.IsRunning {
+				if b.IsRunning {
+					return 0
+				}
+				return -1
+			} else if b.IsRunning {
+				return 1
 			}
-			return experiments[i].ExitStatus < experiments[j].ExitStatus
+			return compareInt(a.ExitStatus, b.ExitStatus)
 		}
 	case "duration":
-		sortFunc = func(i, j int) bool {
-			return experiments[i].DurationSecs < experiments[j].DurationSecs
+		sortFunc = func(a, b utils.RunInfo) int {
+			return compareDuration(a.EndTime.Sub(a.StartTime), b.EndTime.Sub(b.StartTime))
 		}
 	default: // "date" or any other value defaults to date
-		sortFunc = func(i, j int) bool {
-			return experiments[i].Timestamp.After(experiments[j].Timestamp)
+		sortFunc = func(a, b utils.RunInfo) int {
+			return compareTime(a.StartTime, b.StartTime)
 		}
 	}
 
 	// Apply reverse if requested
 	if reverse {
 		originalFunc := sortFunc
-		sortFunc = func(i, j int) bool {
-			return !originalFunc(i, j)
+		sortFunc = func(a, b utils.RunInfo) int {
+			return -originalFunc(a, b)
 		}
 	}
 
 	// Sort the slice
-	sort.Slice(experiments, sortFunc)
+	slices.SortStableFunc(experiments, sortFunc)
+}
+
+func compareInt(a, b int) int {
+	switch {
+	case a < b:
+		return -1
+	case a > b:
+		return 1
+	default:
+		return 0
+	}
+}
+
+func compareDuration(a, b time.Duration) int {
+	switch {
+	case a < b:
+		return -1
+	case a > b:
+		return 1
+	default:
+		return 0
+	}
+}
+
+func compareTime(a, b time.Time) int {
+	switch {
+	case a.Before(b):
+		return -1
+	case a.After(b):
+		return 1
+	default:
+		return 0
+	}
 }
 
 // outputTable formats and displays experiments as a table
-func outputTable(experiments []Info) error {
+func outputTable(experiments []utils.RunInfo) error {
 	// Create a tabwriter for aligned columns
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
@@ -411,11 +333,11 @@ func outputTable(experiments []Info) error {
 }
 
 // outputJSON formats and displays experiments as JSON
-func outputJSON(experiments []Info) error {
+func outputJSON(experiments []utils.RunInfo) error {
 	// Create output structure
 	output := struct {
-		Experiments []Info `json:"experiments"`
-		Count       int    `json:"count"`
+		Experiments []utils.RunInfo `json:"experiments"`
+		Count       int             `json:"count"`
 	}{
 		Experiments: experiments,
 		Count:       len(experiments),
@@ -433,7 +355,7 @@ func outputJSON(experiments []Info) error {
 }
 
 // outputCSV formats and displays experiments as CSV
-func outputCSV(experiments []Info) error {
+func outputCSV(experiments []utils.RunInfo) error {
 	// Create a CSV writer
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
@@ -460,7 +382,7 @@ func outputCSV(experiments []Info) error {
 		}
 
 		// Format timestamp
-		timestamp := exp.Timestamp.Format("2006-01-02 15:04:05")
+		timestamp := exp.StartTime.Format("2006-01-02 15:04:05")
 
 		// Format duration
 		duration := exp.Duration
