@@ -39,13 +39,6 @@ func InitConfig() error {
 	// Set defaults
 	setDefaults()
 
-	// Check for project-level config
-	if _, err := os.Stat(".moco.toml"); err == nil {
-		if err := loadConfigFile(".moco.toml"); err != nil {
-			return err
-		}
-	}
-
 	// Check for user-level config
 	configDir, err := os.UserConfigDir()
 	if err == nil {
@@ -54,6 +47,13 @@ func InitConfig() error {
 			if err := loadConfigFile(userConfig); err != nil {
 				return err
 			}
+		}
+	}
+
+	// Check for project-level config
+	if _, err := os.Stat(".moco.toml"); err == nil {
+		if err := loadConfigFile(".moco.toml"); err != nil {
+			return err
 		}
 	}
 
