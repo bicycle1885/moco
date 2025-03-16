@@ -28,11 +28,15 @@ type RunInfo struct {
 	Interrupted bool      `json:"interrupted"`
 }
 
-func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo git.RepoStatus, command []string, directry string) error {
+func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo git.RepoStatus, command []string) error {
+	// Get hostname
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "unknown"
 	}
+
+	// Get working directory
+	directry, _ := filepath.Split(summaryPath)
 
 	// Get git commit details
 	commitDetails, err := git.GetCommitDetails()

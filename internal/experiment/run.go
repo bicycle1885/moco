@@ -68,7 +68,7 @@ func Run(opts RunOptions) error {
 
 	// Write metadata to summary file
 	summaryPath := filepath.Join(expDir, cfg.Paths.SummaryFile)
-	if err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, opts.Command, expDir); err != nil {
+	if err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, opts.Command); err != nil {
 		return fmt.Errorf("failed to write summary: %w", err)
 	}
 
