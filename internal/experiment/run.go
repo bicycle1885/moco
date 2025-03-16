@@ -54,7 +54,7 @@ func Run(opts RunOptions) error {
 
 	// Create unique experiment directory
 	startTime := time.Now()
-	dirName := fmt.Sprintf("%s_%s_%s", startTime.Format("2006-01-02T15:04:05.000"), sanitizeName(repo.Branch), repo.ShortHash)
+	dirName := fmt.Sprintf("%s_%s_%s", startTime.Format("2006-01-02T15:04:05.000"), sanitizeBranchName(repo.Branch), repo.ShortHash)
 	expDir := filepath.Join(baseDir, dirName)
 
 	if err := os.Mkdir(expDir, 0755); err != nil {
@@ -157,8 +157,8 @@ func Run(opts RunOptions) error {
 	return nil
 }
 
-// Helper function implementations (sanitizeName, writeSummary, appendSummaryResults)
-func sanitizeName(name string) string {
+// sanitizeBranchName replaces problematic characters in branch names
+func sanitizeBranchName(name string) string {
 	// Replace problematic characters with underscores
 	r := strings.NewReplacer("/", "_", "\\", "_", ":", "_", "*", "_",
 		"?", "_", "\"", "_", "<", "_", ">", "_",
