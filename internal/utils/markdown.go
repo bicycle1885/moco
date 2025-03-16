@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bicycle1885/moco/internal/git"
 )
 
 // RunInfo contains information about a specific run
@@ -23,6 +26,162 @@ type RunInfo struct {
 	Branch      string    `json:"branch"`
 	CommitHash  string    `json:"commit_hash"`
 	Interrupted bool      `json:"interrupted"`
+}
+
+func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo git.RepoStatus, command []string, directry string) error {
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "unknown"
+	}
+
+	// Get git commit details
+	commitDetails, err := git.GetCommitDetails()
+	if err != nil {
+		commitDetails = "Error retrieving commit details"
+	}
+
+	// Get git status
+	gitStatus, err := git.GetRepoStatus()
+	if err != nil {
+		gitStatus = git.RepoStatus{IsValid: false}
+	}
+
+	// Get git diff
+	gitDiff, err := git.GetUncommittedChanges()
+	if err != nil {
+		gitDiff = "Error retrieving uncommitted changes"
+	}
+
+	// Get system info
+	sysInfo := getSystemInfo()
+
+	// Construct metadata section
+	var b strings.Builder
+
+	// Header
+	b.WriteString("# Experiment Summary\n\n")
+
+	// Metadata
+	b.WriteString("## Metadata\n")
+	fmt.Fprintf(&b, "- **Execution datetime**: %s\n", startTime.Format("2006-01-02T15:04:05"))
+	fmt.Fprintf(&b, "- **Branch**: `%s`\n", repo.Branch)
+	fmt.Fprintf(&b, "- **Commit hash**: `%s`\n", repo.FullHash)
+	fmt.Fprintf(&b, "- **Command**: `%s`\n", strings.Join(command, " "))
+	fmt.Fprintf(&b, "- **Hostname**: `%s`\n", hostname)
+	fmt.Fprintf(&b, "- **Working directory**: `%s`\n", directry)
+
+	// Commit details
+	b.WriteString("\n## Latest Commit Details\n")
+	b.WriteString("```diff\n")
+	b.WriteString(commitDetails)
+	b.WriteString("\n```\n")
+
+	// Git status
+	b.WriteString("\n## Git Status\n")
+	b.WriteString("```\n")
+	b.WriteString(formatGitStatus(gitStatus))
+	b.WriteString("\n```\n")
+
+	// Git diff
+	b.WriteString("\n## Uncommitted Changes (Diff)\n")
+	b.WriteString("```diff\n")
+	b.WriteString(gitDiff)
+	b.WriteString("\n```\n")
+
+	// System info
+	b.WriteString("\n## Environment Info\n")
+	b.WriteString("```\n")
+	b.WriteString(sysInfo)
+	b.WriteString("\n```\n")
+
+	// Create summary file
+	file, err := os.Create(summaryPath)
+	if err != nil {
+		return fmt.Errorf("failed to create summary file: %w", err)
+	}
+	defer file.Close()
+
+	// Write metadata to file
+	if _, err := file.WriteString(b.String()); err != nil {
+		return fmt.Errorf("failed to write metadata: %w", err)
+	}
+
+	return nil
+}
+
+// getSystemInfo retrieves system information
+func getSystemInfo() string {
+	var sysInfo strings.Builder
+	cmd := exec.Command("uname", "-a")
+	cmd.Stdout = &sysInfo
+	if err := cmd.Run(); err != nil {
+		sysInfo.WriteString(fmt.Sprintf("Error retrieving system info: %v", err))
+	}
+	return sysInfo.String()
+}
+
+// formatGitStatus converts git status to a string for display
+func formatGitStatus(repo git.RepoStatus) string {
+	if !repo.IsValid {
+		return "Not a valid git repository"
+	}
+
+	status := fmt.Sprintf("On branch %s\n", repo.Branch)
+	if repo.IsDirty {
+		status += "Changes not staged for commit:\n"
+		status += "  (use \"git add <file>...\" to update what will be committed)\n"
+		status += "  (use \"git restore <file>...\" to discard changes in working directory)\n"
+		status += "\n"
+		status += "        modified:   [uncommitted changes present]\n"
+	} else {
+		status += "nothing to commit, working tree clean\n"
+	}
+
+	return status
+}
+
+func WriteSummaryFileEnd(summaryPath string, startTime, endTime time.Time, exitCode int, interrupted bool) error {
+	// Open the summary file
+	file, err := os.OpenFile(summaryPath, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open summary file: %w", err)
+	}
+	defer file.Close()
+
+	// Create the results section
+	results := fmt.Sprintf(`
+## Execution Results
+- **Execution finished**: %s
+- **Execution time**: %s
+- **Exit status**: %d
+`, endTime.Format("2006-01-02T15:04:05"), formatDuration(endTime.Sub(startTime)), exitCode)
+
+	if interrupted {
+		results += "- **Terminated by user**\n"
+	}
+
+	// Write results to file
+	if _, err := file.WriteString(results); err != nil {
+		return fmt.Errorf("failed to write results: %w", err)
+	}
+
+	return nil
+}
+
+// formatDuration formats a duration in a human-readable way (Xh Ym Zs)
+func formatDuration(d time.Duration) string {
+	d = d.Round(time.Second)
+
+	hours := int(d.Hours())
+	minutes := int(d.Minutes()) % 60
+	seconds := int(d.Seconds()) % 60
+
+	if hours > 0 {
+		return fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
+	} else if minutes > 0 {
+		return fmt.Sprintf("%dm %ds", minutes, seconds)
+	}
+	return fmt.Sprintf("%ds", seconds)
 }
 
 // ParseRunInfo extracts info from a summary.md file

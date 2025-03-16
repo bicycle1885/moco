@@ -8,8 +8,35 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/bicycle1885/moco/internal/git"
 	"github.com/bicycle1885/moco/internal/utils"
 )
+
+func TestWriteSummaryFileInit(t *testing.T) {
+	// Create a temporary directory for test files
+	tempDir := t.TempDir()
+
+	t.Run("Valid summary file", func(t *testing.T) {
+		summaryPath := filepath.Join(tempDir, "summary.md")
+		startTime, _ := time.Parse("2006-01-02T15:04:05", "2023-01-02T15:04:05")
+		endTime, _ := time.Parse("2006-01-02T15:04:05", "2023-01-02T15:05:05")
+		repo := git.RepoStatus{
+			Branch: "main",
+		}
+		commmand := []string{"sleep", "5"}
+		directory := tempDir
+		exitCode := 0
+		interrupted := false
+		{
+			err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, commmand, directory)
+			assert.NoError(t, err)
+		}
+		{
+			err := utils.WriteSummaryFileEnd(summaryPath, startTime, endTime, exitCode, interrupted)
+			assert.NoError(t, err)
+		}
+	})
+}
 
 func TestParseRunInfo(t *testing.T) {
 	// Create a temporary directory for test files
