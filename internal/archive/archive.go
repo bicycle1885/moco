@@ -144,6 +144,9 @@ func findExperimentsToArchive(baseDir string, cutoff time.Time, statusFilter str
 	// Pattern for experiment directories
 	pattern := regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3})_(.+)_([a-f0-9]{7})$`)
 
+	// Get configuration
+	cfg := config.GetConfig()
+
 	// Read all entries in base directory
 	entries, err := os.ReadDir(baseDir)
 	if err != nil {
@@ -184,7 +187,7 @@ func findExperimentsToArchive(baseDir string, cutoff time.Time, statusFilter str
 		}
 
 		// Parse summary file to check if it's finished and the exit status
-		summaryPath := filepath.Join(expInfo.Path, "summary.md")
+		summaryPath := filepath.Join(expInfo.Path, cfg.Paths.SummaryFile)
 		if err := parseExperimentStatus(&expInfo, summaryPath); err != nil {
 			// If we can't parse, skip based on filter
 			if statusFilter != "" && statusFilter != "all" {
@@ -211,7 +214,7 @@ func findExperimentsToArchive(baseDir string, cutoff time.Time, statusFilter str
 	return results, nil
 }
 
-// parseExperimentStatus extracts status information from a summary.md file
+// parseExperimentStatus extracts status information from a summary file
 func parseExperimentStatus(expInfo *ExperimentInfo, summaryPath string) error {
 	// Default to running
 	expInfo.IsFinished = false

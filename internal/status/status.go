@@ -68,6 +68,9 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 		return stats, nil // Return empty stats if directory doesn't exist
 	}
 
+	// Get config
+	cfg := config.GetConfig()
+
 	// Pattern for experiment directories
 	pattern := regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3})_(.+)_([a-f0-9]{7})$`)
 
@@ -97,7 +100,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 		stats.TotalExperiments++
 
 		// Parse summary file for status
-		summaryPath := filepath.Join(path, "summary.md")
+		summaryPath := filepath.Join(path, cfg.Paths.SummaryFile)
 		runInfo, err := utils.ParseRunInfo(summaryPath)
 		if err != nil {
 			// TODO: fix this
