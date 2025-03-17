@@ -120,3 +120,9 @@ func GetUncommittedChanges() (string, error) {
 
 	return diff, nil
 }
+
+// SanitizeBranchName replaces invalid characters in a branch name
+func SanitizeBranchName(name string) string {
+	// https://git-scm.com/docs/git-check-ref-format
+	return strings.ReplaceAll(name, "/", "-")
+}
