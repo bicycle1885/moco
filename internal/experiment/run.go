@@ -39,7 +39,7 @@ func Run(opts RunOptions) error {
 
 	// Validate git status
 	if repo.IsDirty && !opts.Force && cfg.Git.RequireClean {
-		return fmt.Errorf("git repository has uncommitted changes, use --force to override")
+		return fmt.Errorf("git repository has uncommitted changes, use --force to run anyway")
 	}
 
 	// Create experiment directory with millisecond timestamp
