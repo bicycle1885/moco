@@ -37,7 +37,7 @@ func Run(commands []string, opts RunOptions) error {
 	}
 
 	// Validate git status
-	if repo.IsDirty && !opts.Force && cfg.Git.RequireClean {
+	if repo.IsDirty && !opts.Force {
 		return fmt.Errorf("git repository has uncommitted changes, use --force to run anyway")
 	}
 

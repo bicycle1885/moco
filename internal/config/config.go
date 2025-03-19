@@ -22,10 +22,6 @@ type Config struct {
 		NoPushd       bool `toml:"no_pushd"`
 	} `toml:"run"`
 
-	Git struct {
-		RequireClean bool `toml:"require_clean"`
-	} `toml:"git"`
-
 	Archive struct {
 		Format      string `toml:"format"`
 		Destination string `toml:"destination"`
@@ -77,9 +73,6 @@ func setDefaults() {
 	globalConfig.Run.Force = false
 	globalConfig.Run.CleanupOnFail = false
 	globalConfig.Run.NoPushd = false
-
-	// Git
-	globalConfig.Git.RequireClean = true
 
 	// Archive
 	globalConfig.Archive.Format = "tar.gz"
