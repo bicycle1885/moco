@@ -57,13 +57,13 @@ and git commit hash to ensure traceability.`,
 
 	// Add flags with defaults from config
 	cfg := config.GetConfig()
-	runCmd.Flags().BoolP("force", "f", cfg.Run.DefaultForce,
-		"Allow experiments to run with uncommitted changes")
 	runCmd.Flags().StringP("dir", "d", cfg.Paths.BaseDir,
 		"Base directory for experiment output")
-	runCmd.Flags().BoolP("no-pushd", "n", cfg.Run.DefaultNoPushd,
+	runCmd.Flags().BoolP("force", "f", cfg.Run.Force,
+		"Allow experiments to run with uncommitted changes")
+	runCmd.Flags().BoolP("no-pushd", "n", cfg.Run.NoPushd,
 		"Execute command in current directory (don't cd to experiment dir)")
-	runCmd.Flags().BoolP("cleanup-on-fail", "c", cfg.Run.DefaultCleanupOnFail,
+	runCmd.Flags().BoolP("cleanup-on-fail", "c", cfg.Run.CleanupOnFail,
 		"Remove experiment directory if command fails")
 	runCmd.Flags().Bool("dev", false,
 		"Development mode: enables both --force and --cleanup-on-fail")

@@ -17,9 +17,9 @@ type Config struct {
 	} `toml:"paths"`
 
 	Run struct {
-		DefaultForce         bool `toml:"default_force"`
-		DefaultCleanupOnFail bool `toml:"default_cleanup_on_fail"`
-		DefaultNoPushd       bool `toml:"default_no_pushd"`
+		Force         bool `toml:"force"`
+		CleanupOnFail bool `toml:"cleanup_on_fail"`
+		NoPushd       bool `toml:"no_pushd"`
 	} `toml:"run"`
 
 	Git struct {
@@ -74,9 +74,9 @@ func setDefaults() {
 	globalConfig.Paths.StderrFile = "stderr.log"
 
 	// Run
-	globalConfig.Run.DefaultForce = false
-	globalConfig.Run.DefaultCleanupOnFail = false
-	globalConfig.Run.DefaultNoPushd = false
+	globalConfig.Run.Force = false
+	globalConfig.Run.CleanupOnFail = false
+	globalConfig.Run.NoPushd = false
 
 	// Git
 	globalConfig.Git.RequireClean = true

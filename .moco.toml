@@ -7,9 +7,9 @@ stdout_file = "stdout.log"
 stderr_file = "stderr.log"
 
 [run]
-default_force = false
-default_cleanup_on_fail = false
-default_no_pushd = false
+force = false
+cleanup_on_fail = false
+no_pushd = false
 
 [git]
 require_clean = true
