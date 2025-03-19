@@ -131,8 +131,16 @@ func Run(opts RunOptions) error {
 		log.Warnf("Received signal: %v", sig)
 
 		if cmd.Process != nil {
-			if err := cmd.Process.Signal(sig); err != nil {
-				log.Errorf("Failed to send signal to process: %v", err)
+			// Check if the process is still running before sending the signal
+			// by sending signal 0, which doesn't actually send a signal but checks if process exists
+			err := cmd.Process.Signal(syscall.Signal(0))
+			if err == nil {
+				// Process is still running, send the termination signal
+				if err := cmd.Process.Signal(sig); err != nil {
+					log.Errorf("Failed to send signal to process: %v", err)
+				}
+			} else {
+				log.Debugf("Process already terminated, no signal sent")
 			}
 		}
 
