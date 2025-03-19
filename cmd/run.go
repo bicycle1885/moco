@@ -28,12 +28,6 @@ Each experiment is stored in a directory with a timestamp, branch name,
 and git commit hash to ensure traceability.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Handle --dev flag combination
-			if devMode, _ := cmd.Flags().GetBool("dev"); devMode {
-				_ = cmd.Flags().Set("force", "true")
-				_ = cmd.Flags().Set("cleanup-on-fail", "true")
-			}
-
 			// Get flag values
 			force, _ := cmd.Flags().GetBool("force")
 			baseDir, _ := cmd.Flags().GetString("dir")
@@ -65,8 +59,6 @@ and git commit hash to ensure traceability.`,
 		"Execute command in current directory (don't cd to experiment dir)")
 	runCmd.Flags().BoolP("cleanup-on-fail", "c", cfg.Run.CleanupOnFail,
 		"Remove experiment directory if command fails")
-	runCmd.Flags().Bool("dev", false,
-		"Development mode: enables both --force and --cleanup-on-fail")
 
 	rootCmd.AddCommand(runCmd)
 }
