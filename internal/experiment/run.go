@@ -58,6 +58,7 @@ func Run(opts RunOptions) error {
 	dirName := fmt.Sprintf("%s_%s_%s", startTime.Format("2006-01-02T15:04:05.000"), git.SanitizeBranchName(repo.Branch), repo.ShortHash)
 	expDir := filepath.Join(baseDir, dirName)
 
+	log.Infof("Creating experiment directory: %s", expDir)
 	if err := os.Mkdir(expDir, 0755); err != nil {
 		return fmt.Errorf("failed to create experiment directory: %w", err)
 	}
@@ -103,7 +104,7 @@ func Run(opts RunOptions) error {
 	cmd.Stderr = io.MultiWriter(os.Stderr, stderrFile)
 
 	// Start the command
-	log.Info(fmt.Sprintf("Starting command in %s: %s", expDir, strings.Join(opts.Command, " ")))
+	log.Infof("Starting command: %s", strings.Join(opts.Command, " "))
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
 	}
