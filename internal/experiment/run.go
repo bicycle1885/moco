@@ -19,15 +19,14 @@ import (
 
 // RunOptions contains options for running an experiment
 type RunOptions struct {
-	Command       []string
-	Force         bool
 	BaseDir       string
+	Force         bool
 	NoPushd       bool
 	CleanupOnFail bool
 }
 
 // Run executes a command with experiment tracking
-func Run(opts RunOptions) error {
+func Run(commands []string, opts RunOptions) error {
 	// Get config
 	cfg := config.GetConfig()
 
@@ -70,7 +69,7 @@ func Run(opts RunOptions) error {
 
 	// Write metadata to summary file
 	summaryPath := filepath.Join(expDir, cfg.Paths.SummaryFile)
-	if err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, opts.Command); err != nil {
+	if err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, commands); err != nil {
 		return fmt.Errorf("failed to write summary: %w", err)
 	}
 
@@ -79,7 +78,7 @@ func Run(opts RunOptions) error {
 	stderrPath := filepath.Join(expDir, cfg.Paths.StderrFile)
 
 	// Execute command
-	cmd := exec.Command(opts.Command[0], opts.Command[1:]...)
+	cmd := exec.Command(commands[0], commands[1:]...)
 
 	// Set working directory if required
 	if !opts.NoPushd {
@@ -104,7 +103,7 @@ func Run(opts RunOptions) error {
 	cmd.Stderr = io.MultiWriter(os.Stderr, stderrFile)
 
 	// Start the command
-	log.Infof("Starting command: %s", strings.Join(opts.Command, " "))
+	log.Infof("Starting command: %s", strings.Join(commands, " "))
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
 	}

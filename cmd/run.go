@@ -41,8 +41,7 @@ and git commit hash to ensure traceability.`,
 			cleanupOnFail, _ := cmd.Flags().GetBool("cleanup-on-fail")
 
 			// Execute the command with experiment tracking
-			if err := experiment.Run(experiment.RunOptions{
-				Command:       args,
+			if err := experiment.Run(args, experiment.RunOptions{
 				Force:         force,
 				BaseDir:       baseDir,
 				NoPushd:       noPushd,
