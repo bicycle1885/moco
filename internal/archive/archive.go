@@ -54,18 +54,7 @@ func Run(runs []string, opts Options) error {
 		cutoff = time.Now().AddDate(1, 0, 0)
 	}
 
-	// Ensure destination directory
-	destDir := opts.Destination
-	if destDir == "" {
-		destDir = "archives"
-	}
-
-	if !opts.DryRun {
-		if err := os.MkdirAll(destDir, 0755); err != nil {
-			return fmt.Errorf("failed to create destination directory: %w", err)
-		}
-	}
-
+	// Filter runs to archive
 	runInfos := filterRunsToArchive(runs, cutoff, opts.Status)
 	if len(runInfos) == 0 {
 		return fmt.Errorf("no runs found matching the criteria")
@@ -92,6 +81,16 @@ func Run(runs []string, opts Options) error {
 	if !confirmArchive() {
 		log.Info("Archive operation cancelled")
 		return nil
+	}
+
+	// Ensure destination directory
+	destDir := opts.Destination
+	if destDir == "" {
+		destDir = "archives"
+	}
+
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
 	}
 
 	// Archive each run
