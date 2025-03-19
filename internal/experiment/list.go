@@ -29,35 +29,35 @@ type ListOptions struct {
 	Limit   int    // Limit number of results
 }
 
-// List displays and filters experiments
+// List displays and filters runs
 func List(opts ListOptions) error {
 	// Get config
 	cfg := config.GetConfig()
 
-	// Find all experiments
-	experiments, err := findExperiments(cfg.Paths.BaseDir)
+	// Find all runs
+	runs, err := findRuns(cfg.Paths.BaseDir)
 	if err != nil {
-		return fmt.Errorf("failed to find experiments: %w", err)
+		return fmt.Errorf("failed to find runs: %w", err)
 	}
 
-	if len(experiments) == 0 {
-		fmt.Println("No experiments found.")
+	if len(runs) == 0 {
+		fmt.Println("No runs found.")
 		return nil
 	}
 
 	// Apply filters
-	filtered, err := filterExperiments(experiments, opts)
+	filtered, err := filterRuns(runs, opts)
 	if err != nil {
 		return fmt.Errorf("failed to apply filters: %w", err)
 	}
 
 	if len(filtered) == 0 {
-		fmt.Println("No experiments match the specified criteria.")
+		fmt.Println("No runs match the specified criteria.")
 		return nil
 	}
 
-	// Sort experiments
-	sortExperiments(filtered, opts.SortBy, opts.Reverse)
+	// Sort runs
+	sortRuns(filtered, opts.SortBy, opts.Reverse)
 
 	// Apply limit if specified
 	if opts.Limit > 0 && opts.Limit < len(filtered) {
@@ -75,13 +75,13 @@ func List(opts ListOptions) error {
 	}
 }
 
-// findExperiments scans the base directory for experiment directories
-func findExperiments(baseDir string) ([]utils.RunInfo, error) {
-	var experiments []utils.RunInfo
+// findRuns scans the base directory for experiment directories
+func findRuns(baseDir string) ([]utils.RunInfo, error) {
+	var runs []utils.RunInfo
 
 	// Ensure base directory exists
 	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
-		return experiments, nil // Return empty slice if directory doesn't exist
+		return runs, nil // Return empty slice if directory doesn't exist
 	}
 
 	// Pattern for experiment directories
@@ -117,14 +117,14 @@ func findExperiments(baseDir string) ([]utils.RunInfo, error) {
 			return nil, fmt.Errorf("failed to parse summary file: %w", err)
 		}
 
-		experiments = append(experiments, runInfo)
+		runs = append(runs, runInfo)
 	}
 
-	return experiments, nil
+	return runs, nil
 }
 
-// filterExperiments applies filters to experiment results
-func filterExperiments(experiments []utils.RunInfo, opts ListOptions) ([]utils.RunInfo, error) {
+// filterRuns applies filters to run results
+func filterRuns(runs []utils.RunInfo, opts ListOptions) ([]utils.RunInfo, error) {
 	var filtered []utils.RunInfo
 
 	// Parse 'since' filter if provided
@@ -147,37 +147,37 @@ func filterExperiments(experiments []utils.RunInfo, opts ListOptions) ([]utils.R
 		}
 	}
 
-	// Filter each experiment
-	for _, exp := range experiments {
+	// Filter each run
+	for _, run := range runs {
 		// Filter by branch
-		if opts.Branch != "" && !strings.Contains(exp.Branch, opts.Branch) {
+		if opts.Branch != "" && !strings.Contains(run.Branch, opts.Branch) {
 			continue
 		}
 
 		// Filter by status
 		if opts.Status != "" {
-			if opts.Status == "success" && (exp.IsRunning || exp.ExitStatus != 0) {
+			if opts.Status == "success" && (run.IsRunning || run.ExitStatus != 0) {
 				continue
 			}
-			if opts.Status == "failure" && (exp.IsRunning || exp.ExitStatus == 0) {
+			if opts.Status == "failure" && (run.IsRunning || run.ExitStatus == 0) {
 				continue
 			}
-			if opts.Status == "running" && !exp.IsRunning {
+			if opts.Status == "running" && !run.IsRunning {
 				continue
 			}
 		}
 
 		// Filter by date
-		if !sinceTime.IsZero() && exp.StartTime.Before(sinceTime) {
+		if !sinceTime.IsZero() && run.StartTime.Before(sinceTime) {
 			continue
 		}
 
 		// Filter by command
-		if commandRegex != nil && !commandRegex.MatchString(exp.Command) {
+		if commandRegex != nil && !commandRegex.MatchString(run.Command) {
 			continue
 		}
 
-		filtered = append(filtered, exp)
+		filtered = append(filtered, run)
 	}
 
 	return filtered, nil
@@ -211,8 +211,8 @@ func parseDuration(s string) (time.Duration, error) {
 	return time.Duration(value) * multiplier, nil
 }
 
-// sortExperiments sorts experiments based on criteria
-func sortExperiments(experiments []utils.RunInfo, sortBy string, reverse bool) {
+// sortRuns sorts runs based on criteria
+func sortRuns(runs []utils.RunInfo, sortBy string, reverse bool) {
 	// Define sort function based on criteria
 	var sortFunc func(i, j utils.RunInfo) int
 
@@ -253,7 +253,7 @@ func sortExperiments(experiments []utils.RunInfo, sortBy string, reverse bool) {
 	}
 
 	// Sort the slice
-	slices.SortStableFunc(experiments, sortFunc)
+	slices.SortStableFunc(runs, sortFunc)
 }
 
 func compareInt(a, b int) int {
@@ -289,8 +289,8 @@ func compareTime(a, b time.Time) int {
 	}
 }
 
-// outputTable formats and displays experiments as a table
-func outputTable(experiments []utils.RunInfo) error {
+// outputTable formats and displays runs as a table
+func outputTable(runs []utils.RunInfo) error {
 	// Create a tabwriter for aligned columns
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	defer w.Flush()
@@ -298,49 +298,49 @@ func outputTable(experiments []utils.RunInfo) error {
 	// Write header
 	fmt.Fprintln(w, "DIRECTORY\tBRANCH\tSTATUS\tDURATION\tCOMMAND")
 
-	// Write each experiment
-	for _, exp := range experiments {
+	// Write each run
+	for _, run := range runs {
 		// Format status
 		status := "Running"
-		if !exp.IsRunning {
-			if exp.ExitStatus == 0 {
+		if !run.IsRunning {
+			if run.ExitStatus == 0 {
 				status = "Success"
 			} else {
-				status = fmt.Sprintf("Failed (%d)", exp.ExitStatus)
-				if exp.Interrupted {
+				status = fmt.Sprintf("Failed (%d)", run.ExitStatus)
+				if run.Interrupted {
 					status = "Interrupted"
 				}
 			}
 		}
 
 		// Format duration
-		duration := exp.Duration
+		duration := run.Duration
 		if duration == "" {
 			duration = "-"
 		}
 
 		// Write the row
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			exp.Directory,
-			exp.Branch,
+			run.Directory,
+			run.Branch,
 			status,
 			duration,
-			exp.Command,
+			run.Command,
 		)
 	}
 
 	return nil
 }
 
-// outputJSON formats and displays experiments as JSON
-func outputJSON(experiments []utils.RunInfo) error {
+// outputJSON formats and displays runs as JSON
+func outputJSON(runs []utils.RunInfo) error {
 	// Create output structure
 	output := struct {
-		Experiments []utils.RunInfo `json:"experiments"`
-		Count       int             `json:"count"`
+		Runs  []utils.RunInfo `json:"runs"`
+		Count int             `json:"count"`
 	}{
-		Experiments: experiments,
-		Count:       len(experiments),
+		Runs:  runs,
+		Count: len(runs),
 	}
 
 	// Marshal to JSON
@@ -354,8 +354,8 @@ func outputJSON(experiments []utils.RunInfo) error {
 	return nil
 }
 
-// outputCSV formats and displays experiments as CSV
-func outputCSV(experiments []utils.RunInfo) error {
+// outputCSV formats and displays runs as CSV
+func outputCSV(runs []utils.RunInfo) error {
 	// Create a CSV writer
 	w := csv.NewWriter(os.Stdout)
 	defer w.Flush()
@@ -366,39 +366,39 @@ func outputCSV(experiments []utils.RunInfo) error {
 		return fmt.Errorf("failed to write CSV header: %w", err)
 	}
 
-	// Write each experiment
-	for _, exp := range experiments {
+	// Write each run
+	for _, run := range runs {
 		// Format status
 		status := "Running"
-		if !exp.IsRunning {
-			if exp.ExitStatus == 0 {
+		if !run.IsRunning {
+			if run.ExitStatus == 0 {
 				status = "Success"
 			} else {
-				status = fmt.Sprintf("Failed (%d)", exp.ExitStatus)
-				if exp.Interrupted {
+				status = fmt.Sprintf("Failed (%d)", run.ExitStatus)
+				if run.Interrupted {
 					status = "Interrupted"
 				}
 			}
 		}
 
 		// Format timestamp
-		timestamp := exp.StartTime.Format("2006-01-02 15:04:05")
+		timestamp := run.StartTime.Format("2006-01-02 15:04:05")
 
 		// Format duration
-		duration := exp.Duration
+		duration := run.Duration
 		if duration == "" {
 			duration = "-"
 		}
 
 		// Create the record
 		record := []string{
-			exp.Directory,
+			run.Directory,
 			timestamp,
-			exp.Branch,
-			exp.CommitHash,
+			run.Branch,
+			run.CommitHash,
 			status,
 			duration,
-			exp.Command,
+			run.Command,
 		}
 
 		// Write the record
