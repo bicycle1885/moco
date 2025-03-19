@@ -14,6 +14,7 @@ import (
 
 	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/utils"
+	"github.com/charmbracelet/log"
 	"golang.org/x/exp/slices"
 )
 
@@ -41,7 +42,7 @@ func List(opts ListOptions) error {
 	}
 
 	if len(runs) == 0 {
-		fmt.Println("No runs found.")
+		log.Info("No runs found")
 		return nil
 	}
 
@@ -52,7 +53,7 @@ func List(opts ListOptions) error {
 	}
 
 	if len(filtered) == 0 {
-		fmt.Println("No runs match the specified criteria.")
+		log.Info("No runs match the specified criteria")
 		return nil
 	}
 
