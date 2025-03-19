@@ -22,13 +22,13 @@ type Options struct {
 
 // ProjectStats contains project statistics
 type ProjectStats struct {
-	TotalExperiments int             `json:"total_experiments"`
-	SuccessCount     int             `json:"success_count"`
-	FailureCount     int             `json:"failure_count"`
-	RunningCount     int             `json:"running_count"`
-	DiskUsage        string          `json:"disk_usage"`
-	DiskUsageBytes   int64           `json:"disk_usage_bytes"`
-	RecentRuns       []utils.RunInfo `json:"recent_runs,omitempty"`
+	TotalRuns      int             `json:"total_runs"`
+	SuccessCount   int             `json:"success_count"`
+	FailureCount   int             `json:"failure_count"`
+	RunningCount   int             `json:"running_count"`
+	DiskUsage      string          `json:"disk_usage"`
+	DiskUsageBytes int64           `json:"disk_usage_bytes"`
+	RecentRuns     []utils.RunInfo `json:"recent_runs,omitempty"`
 }
 
 // Show displays project status
@@ -57,7 +57,7 @@ func Show(opts Options) error {
 	}
 }
 
-// getProjectStats computes statistics about experiments
+// getProjectStats computes statistics about runs
 func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, error) {
 	stats := ProjectStats{
 		RecentRuns: []utils.RunInfo{},
@@ -71,7 +71,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 	// Get config
 	cfg := config.GetConfig()
 
-	// Pattern for experiment directories
+	// Pattern for runs directories
 	pattern := regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3})_(.+)_([a-f0-9]{7})$`)
 
 	// Walk the base directory to gather stats
@@ -89,15 +89,15 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 			return nil
 		}
 
-		// Check if it's an experiment directory
+		// Check if it's a run directory
 		dirName := filepath.Base(path)
 		matches := pattern.FindStringSubmatch(dirName)
 		if len(matches) != 4 {
-			return nil // Not an experiment directory
+			return nil // Not a run directory
 		}
 
-		// It's an experiment directory
-		stats.TotalExperiments++
+		// It's a run directory
+		stats.TotalRuns++
 
 		// Parse summary file for status
 		summaryPath := filepath.Join(path, cfg.Paths.SummaryFile)
@@ -122,7 +122,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 			stats.RecentRuns = append(stats.RecentRuns, runInfo)
 		}
 
-		// Don't recurse into experiment directories
+		// Don't recurse into run directories
 		return filepath.SkipDir
 	})
 
@@ -165,15 +165,15 @@ func outputStatusText(repo git.RepoStatus, stats ProjectStats, detailLevel strin
 
 	// Output basic project stats
 	fmt.Println("\nProject Statistics:")
-	fmt.Printf("  Total experiments: %d\n", stats.TotalExperiments)
+	fmt.Printf("  Total runs: %d\n", stats.TotalRuns)
 	fmt.Printf("  Success rate: %.1f%% (%d/%d)\n",
 		percentOrZero(stats.SuccessCount, stats.SuccessCount+stats.FailureCount),
 		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
 	fmt.Printf("  Disk usage: %s\n", stats.DiskUsage)
 
-	// Show running experiments if any
+	// Show running runs if any
 	if stats.RunningCount > 0 {
-		fmt.Printf("\nRunning Experiments: %d\n", stats.RunningCount)
+		fmt.Printf("\nRunning runs: %d\n", stats.RunningCount)
 
 		if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
 			for _, run := range stats.RecentRuns {
@@ -186,9 +186,9 @@ func outputStatusText(repo git.RepoStatus, stats ProjectStats, detailLevel strin
 		}
 	}
 
-	// Show recent completed experiments if requested
+	// Show recent completed runs if requested
 	if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
-		fmt.Println("\nRecent Completed Experiments:")
+		fmt.Println("\nRecent Runs:")
 		for _, run := range stats.RecentRuns {
 			if !run.IsRunning {
 				status := "Success"
@@ -279,15 +279,15 @@ func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel s
 
 	// Output basic project stats
 	fmt.Println("\n## Project Statistics")
-	fmt.Printf("- **Total experiments**: %d\n", stats.TotalExperiments)
+	fmt.Printf("- **Total runs**: %d\n", stats.TotalRuns)
 	fmt.Printf("- **Success rate**: %.1f%% (%d/%d)\n",
 		percentOrZero(stats.SuccessCount, stats.SuccessCount+stats.FailureCount),
 		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
 	fmt.Printf("- **Disk usage**: %s\n", stats.DiskUsage)
 
-	// Show running experiments if any
+	// Show running runs if any
 	if stats.RunningCount > 0 {
-		fmt.Printf("\n## Running Experiments: %d\n", stats.RunningCount)
+		fmt.Printf("\n## Running runs: %d\n", stats.RunningCount)
 
 		if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
 			for _, run := range stats.RecentRuns {
@@ -302,9 +302,9 @@ func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel s
 		}
 	}
 
-	// Show recent completed experiments if requested
+	// Show recent runs if requested
 	if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
-		fmt.Println("\n## Recent Completed Experiments")
+		fmt.Println("\n## Recent Runs")
 		for _, run := range stats.RecentRuns {
 			if !run.IsRunning {
 				status := "Success"
