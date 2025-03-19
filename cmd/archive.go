@@ -7,7 +7,7 @@ import (
 
 func init() {
 	archiveCmd := &cobra.Command{
-		Use:   "archive",
+		Use:   "archive [run_directories...]",
 		Short: "Archive and compress experiment directories",
 		Long: `Archive and compress experiment directories to save disk space.
 
@@ -15,7 +15,11 @@ This command helps manage disk space by archiving older or completed
 experiments into compressed archives (tar.gz or zip). Experiments can be
 filtered by age, status, and other criteria before archiving.
 
+You can specify one or more run directories to archive specific experiments,
+or use the filtering options to archive experiments based on criteria.
+
 An archive index is maintained for easy reference to archived experiments.`,
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Get flag values
 			olderThan, _ := cmd.Flags().GetString("older-than")
@@ -26,7 +30,7 @@ An archive index is maintained for easy reference to archived experiments.`,
 			dryRun, _ := cmd.Flags().GetBool("dry-run")
 
 			// Archive experiments with provided options
-			return archive.Run(archive.Options{
+			return archive.Run(args, archive.Options{
 				OlderThan:   olderThan,
 				Status:      status,
 				Format:      format,

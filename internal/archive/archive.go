@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -15,6 +14,8 @@ import (
 	"time"
 
 	"github.com/bicycle1885/moco/internal/config"
+	"github.com/bicycle1885/moco/internal/utils"
+	"github.com/charmbracelet/log"
 )
 
 // Options defines archiving options
@@ -27,19 +28,8 @@ type Options struct {
 	DryRun      bool   // Show what would be archived
 }
 
-// ExperimentInfo holds information about an experiment
-type ExperimentInfo struct {
-	Path       string    // Full path to experiment directory
-	Name       string    // Directory name
-	Timestamp  time.Time // Experiment start time
-	Branch     string    // Git branch
-	CommitHash string    // Git commit hash
-	ExitStatus int       // Command exit status
-	IsFinished bool      // Whether experiment has finished
-}
-
 // Run archives experiments
-func Run(opts Options) error {
+func Run(runs []string, opts Options) error {
 	// Get config
 	cfg := config.GetConfig()
 
@@ -51,10 +41,17 @@ func Run(opts Options) error {
 		return fmt.Errorf("unsupported archive format: %s", opts.Format)
 	}
 
-	// Parse olderThan
-	cutoff, err := parseCutoff(opts.OlderThan)
-	if err != nil {
-		return fmt.Errorf("invalid olderThan format: %w", err)
+	// Parse olderThan if provided
+	var cutoff time.Time
+	if opts.OlderThan != "" {
+		var err error
+		cutoff, err = parseCutoff(opts.OlderThan)
+		if err != nil {
+			return fmt.Errorf("invalid olderThan format: %w", err)
+		}
+	} else {
+		// Set the cutoff to a timepoint in the future so that all runs are archived
+		cutoff = time.Now().AddDate(1, 0, 0)
 	}
 
 	// Ensure destination directory
@@ -69,188 +66,129 @@ func Run(opts Options) error {
 		}
 	}
 
-	// Find experiments to archive
-	exps, err := findExperimentsToArchive(cfg.Paths.BaseDir, cutoff, opts.Status)
-	if err != nil {
-		return fmt.Errorf("failed to find experiments: %w", err)
-	}
-
-	if len(exps) == 0 {
-		fmt.Println("No experiments found matching the criteria.")
-		return nil
+	runInfos := filterRunsToArchive(runs, cutoff, opts.Status)
+	if len(runInfos) == 0 {
+		return fmt.Errorf("no runs found matching the criteria")
 	}
 
 	// Show what would be archived
-	fmt.Printf("Found %d experiment(s) to archive:\n", len(exps))
-	for _, exp := range exps {
-		statusStr := "Running"
-		if exp.IsFinished {
-			if exp.ExitStatus == 0 {
-				statusStr = "Success"
-			} else {
-				statusStr = fmt.Sprintf("Failed (exit: %d)", exp.ExitStatus)
-			}
+	log.Infof("Found %d run(s) to archive:", len(runInfos))
+	for _, runInfo := range runInfos {
+		var status string
+		if runInfo.ExitStatus == 0 {
+			status = "Success"
+		} else {
+			status = "Failure"
 		}
-		fmt.Printf("  • %s - %s\n", exp.Name, statusStr)
+		log.Infof("  • %s - %s", runInfo.Directory, status)
 	}
 
 	if opts.DryRun {
-		fmt.Println("\nDry run - no changes made.")
+		log.Info("Dry run completed, no files were archived")
 		return nil
 	}
 
-	// Confirm with user if not in dry run mode
+	// Confirm with user
 	if !confirmArchive() {
-		fmt.Println("Archive operation cancelled.")
+		log.Info("Archive operation cancelled")
 		return nil
 	}
 
-	// Archive each experiment
-	for _, exp := range exps {
-		archivePath := filepath.Join(destDir, exp.Name+"."+opts.Format)
-		fmt.Printf("Archiving %s to %s...\n", exp.Name, archivePath)
-
-		if err := archiveDirectory(exp.Path, archivePath, opts.Format); err != nil {
-			return fmt.Errorf("failed to archive %s: %w", exp.Name, err)
+	// Archive each run
+	for _, runInfo := range runInfos {
+		runDir := runInfo.Directory
+		dirName := filepath.Base(filepath.Clean(runDir))
+		archivePath := filepath.Join(destDir, dirName+"."+opts.Format)
+		log.Infof("Archiving %s to %s", runDir, archivePath)
+		if err := archiveDirectory(runDir, archivePath, opts.Format); err != nil {
+			return fmt.Errorf("failed to archive %s: %w", runDir, err)
 		}
 
 		// Delete original if requested
 		if opts.Delete {
-			fmt.Printf("Deleting original directory %s...\n", exp.Path)
-			if err := os.RemoveAll(exp.Path); err != nil {
-				return fmt.Errorf("failed to delete %s: %w", exp.Path, err)
+			log.Infof("Deleting original directory %s", runDir)
+			if err := os.RemoveAll(runDir); err != nil {
+				return fmt.Errorf("failed to delete %s: %w", runDir, err)
 			}
 		}
 	}
 
-	// Create or update archive index
-	if err := updateArchiveIndex(destDir, exps, opts.Format, opts.Delete); err != nil {
-		fmt.Printf("Warning: failed to update archive index: %v\n", err)
-	}
+	log.Infof("Successfully archived %d run(s)", len(runInfos))
 
-	fmt.Printf("Successfully archived %d experiment(s).\n", len(exps))
 	return nil
 }
 
-// findExperimentsToArchive finds experiments matching criteria
-func findExperimentsToArchive(baseDir string, cutoff time.Time, statusFilter string) ([]ExperimentInfo, error) {
-	var results []ExperimentInfo
-
-	// Ensure base directory exists
-	if _, err := os.Stat(baseDir); os.IsNotExist(err) {
-		return results, nil // Return empty results if directory doesn't exist
-	}
-
-	// Pattern for experiment directories
-	pattern := regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3})_(.+)_([a-f0-9]{7})$`)
+func filterRunsToArchive(runDirs []string, cutoff time.Time, status string) []utils.RunInfo {
+	var results []utils.RunInfo
 
 	// Get configuration
 	cfg := config.GetConfig()
 
-	// Read all entries in base directory
-	entries, err := os.ReadDir(baseDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read base directory: %w", err)
-	}
-
-	// Check each entry
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue // Skip non-directories
+	// Check each run directory
+	for _, runDir := range runDirs {
+		// Check if it's a directory
+		exists, err := directoryExists(runDir)
+		if err != nil {
+			log.Warnf("Failed to check directory: %v", err)
+			continue
 		}
-
-		// Check if the name matches our pattern
-		name := entry.Name()
-		matches := pattern.FindStringSubmatch(name)
-		if len(matches) != 4 {
-			continue // Not an experiment directory
+		if !exists {
+			log.Warnf("Directory not found: %s", runDir)
+			continue
 		}
 
 		// Parse timestamp from directory name
-		timestamp, err := time.Parse("2006-01-02T15:04:05.000", matches[1])
+		dirName := filepath.Base(filepath.Clean(runDir))
+		timestamp, err := time.Parse("2006-01-02T15:04:05.000", dirName[:23])
 		if err != nil {
+			log.Warnf("Failed to parse timestamp: %v", err)
 			continue // Invalid timestamp format
 		}
 
-		// Skip if it's newer than cutoff
+		// Apply timestamp filter; skip if it's newer than cutoff
 		if !timestamp.Before(cutoff) {
 			continue
 		}
 
-		// Create experiment info
-		expInfo := ExperimentInfo{
-			Path:       filepath.Join(baseDir, name),
-			Name:       name,
-			Timestamp:  timestamp,
-			Branch:     matches[2],
-			CommitHash: matches[3],
-		}
-
 		// Parse summary file to check if it's finished and the exit status
-		summaryPath := filepath.Join(expInfo.Path, cfg.Paths.SummaryFile)
-		if err := parseExperimentStatus(&expInfo, summaryPath); err != nil {
-			// If we can't parse, skip based on filter
-			if statusFilter != "" && statusFilter != "all" {
-				continue
-			}
+		summaryPath := filepath.Join(runDir, cfg.Paths.SummaryFile)
+		runInfo, err := utils.ParseRunInfo(summaryPath)
+		if err != nil {
+			log.Warnf("Failed to parse summary file: %v", err)
 		}
 
 		// Apply status filter
-		if statusFilter != "" && statusFilter != "all" {
-			if statusFilter == "success" && (expInfo.ExitStatus != 0 || !expInfo.IsFinished) {
+		if runInfo.IsRunning {
+			continue
+		}
+		if status != "" && status != "all" {
+			if status == "success" && runInfo.ExitStatus != 0 {
 				continue
 			}
-			if statusFilter == "failure" && (expInfo.ExitStatus == 0 || !expInfo.IsFinished) {
-				continue
-			}
-			if statusFilter == "running" && expInfo.IsFinished {
+			if status == "failure" && runInfo.ExitStatus == 0 {
 				continue
 			}
 		}
 
-		results = append(results, expInfo)
+		results = append(results, runInfo)
 	}
 
-	return results, nil
+	return results
 }
 
-// parseExperimentStatus extracts status information from a summary file
-func parseExperimentStatus(expInfo *ExperimentInfo, summaryPath string) error {
-	// Default to running
-	expInfo.IsFinished = false
-	expInfo.ExitStatus = -1
-
-	// Read summary file
-	data, err := os.ReadFile(summaryPath)
+func directoryExists(path string) (bool, error) {
+	info, err := os.Stat(path)
 	if err != nil {
-		return err
-	}
-
-	// Check for exit status line
-	content := string(data)
-	exitStatusRe := regexp.MustCompile(`\*\*Exit status:\*\*\s*(\d+)`)
-	matches := exitStatusRe.FindStringSubmatch(content)
-
-	if len(matches) == 2 {
-		// Found exit status
-		expInfo.IsFinished = true
-		exitStatus, err := strconv.Atoi(matches[1])
-		if err == nil {
-			expInfo.ExitStatus = exitStatus
+		if os.IsNotExist(err) {
+			return false, nil
 		}
+		return false, err
 	}
-
-	return nil
+	return info.IsDir(), nil
 }
 
 // parseCutoff parses a cutoff string like "30d" to a time.Time
 func parseCutoff(cutoff string) (time.Time, error) {
-	if cutoff == "" {
-		// Get default from config if not provided
-		cfg := config.GetConfig()
-		cutoff = cfg.Archive.OlderThan
-	}
-
 	// Parse the duration string
 	re := regexp.MustCompile(`^(\d+)([dhm])$`)
 	matches := re.FindStringSubmatch(cutoff)
@@ -419,6 +357,7 @@ func archiveToZip(srcDir, destPath string) error {
 }
 
 // updateArchiveIndex creates or updates an index of archived experiments
+/*
 func updateArchiveIndex(destDir string, exps []ExperimentInfo, format string, deleted bool) error {
 	// Create or open index file
 	indexPath := filepath.Join(destDir, "archive_index.md")
@@ -484,3 +423,4 @@ func updateArchiveIndex(destDir string, exps []ExperimentInfo, format string, de
 	_, err = file.WriteString(indexContent)
 	return err
 }
+*/

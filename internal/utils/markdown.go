@@ -188,7 +188,7 @@ func formatDuration(d time.Duration) string {
 	return fmt.Sprintf("%ds", seconds)
 }
 
-// ParseRunInfo extracts info from a summary.md file
+// ParseRunInfo extracts info from a summary file
 func ParseRunInfo(summaryPath string) (RunInfo, error) {
 	dirName, fileName := filepath.Split(summaryPath)
 	runInfo := RunInfo{

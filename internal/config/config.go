@@ -27,8 +27,8 @@ type Config struct {
 	} `toml:"git"`
 
 	Archive struct {
-		Format    string `toml:"format"`
-		OlderThan string `toml:"older_than"`
+		Format      string `toml:"format"`
+		Destination string `toml:"destination"`
 	} `toml:"archive"`
 }
 
@@ -83,7 +83,7 @@ func setDefaults() {
 
 	// Archive
 	globalConfig.Archive.Format = "tar.gz"
-	globalConfig.Archive.OlderThan = "30d"
+	globalConfig.Archive.Destination = "archives"
 }
 
 // loadConfigFile reads and parses a TOML configuration file
