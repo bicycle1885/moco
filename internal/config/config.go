@@ -30,10 +30,27 @@ type Config struct {
 
 var globalConfig Config
 
+const defaultConfig = `
+[paths]
+base_dir = "runs"
+summary_file = "summary.md"
+stdout_file = "stdout.log"
+stderr_file = "stderr.log"
+
+[run]
+force = false
+cleanup_on_fail = false
+no_pushd = false
+
+[archive]
+format = "tar.gz"
+older_than = "30d"
+`
+
 // InitConfig loads configuration from files
 func InitConfig() error {
 	// Set defaults
-	setDefaults()
+	loadConfigData([]byte(defaultConfig))
 
 	// Check for user-level config
 	configDir, err := os.UserConfigDir()
@@ -61,30 +78,16 @@ func GetConfig() Config {
 	return globalConfig
 }
 
-// setDefaults initializes the configuration with default values
-func setDefaults() {
-	// Paths
-	globalConfig.Paths.BaseDir = "runs"
-	globalConfig.Paths.SummaryFile = "summary.md"
-	globalConfig.Paths.StdoutFile = "stdout.log"
-	globalConfig.Paths.StderrFile = "stderr.log"
-
-	// Run
-	globalConfig.Run.Force = false
-	globalConfig.Run.CleanupOnFail = false
-	globalConfig.Run.NoPushd = false
-
-	// Archive
-	globalConfig.Archive.Format = "tar.gz"
-	globalConfig.Archive.Destination = "archives"
-}
-
-// loadConfigFile reads and parses a TOML configuration file
+// loadConfigFile reads a TOML file and parses it into the global configuration
 func loadConfigFile(path string) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
+	return loadConfigData(data)
+}
 
+// loadConfigData parses TOML data into the global configuration
+func loadConfigData(data []byte) error {
 	return toml.Unmarshal(data, &globalConfig)
 }
