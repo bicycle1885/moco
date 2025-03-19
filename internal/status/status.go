@@ -22,13 +22,12 @@ type Options struct {
 
 // ProjectStats contains project statistics
 type ProjectStats struct {
-	TotalRuns      int             `json:"total_runs"`
-	SuccessCount   int             `json:"success_count"`
-	FailureCount   int             `json:"failure_count"`
-	RunningCount   int             `json:"running_count"`
-	DiskUsage      string          `json:"disk_usage"`
-	DiskUsageBytes int64           `json:"disk_usage_bytes"`
-	RecentRuns     []utils.RunInfo `json:"recent_runs,omitempty"`
+	TotalRuns    int             `json:"total_runs"`
+	SuccessCount int             `json:"success_count"`
+	FailureCount int             `json:"failure_count"`
+	RunningCount int             `json:"running_count"`
+	DiskUsage    int64           `json:"disk_usage"`
+	RecentRuns   []utils.RunInfo `json:"recent_runs,omitempty"`
 }
 
 // Show displays project status
@@ -137,9 +136,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 		return stats, fmt.Errorf("error walking directory: %w", err)
 	}
 
-	// Format disk usage
-	stats.DiskUsageBytes = totalSize
-	stats.DiskUsage = formatSize(totalSize)
+	stats.DiskUsage = totalSize
 
 	return stats, nil
 }
@@ -191,7 +188,7 @@ func outputStatusText(repo git.RepoStatus, stats ProjectStats, detailLevel strin
 	fmt.Printf("  Success rate: %.1f%% (%d/%d)\n",
 		percentOrZero(stats.SuccessCount, stats.SuccessCount+stats.FailureCount),
 		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
-	fmt.Printf("  Disk usage: %s\n", stats.DiskUsage)
+	fmt.Printf("  Disk usage: %s\n", formatSize(stats.DiskUsage))
 
 	// Show running runs if any
 	if stats.RunningCount > 0 {
@@ -305,7 +302,7 @@ func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel s
 	fmt.Printf("- **Success rate**: %.1f%% (%d/%d)\n",
 		percentOrZero(stats.SuccessCount, stats.SuccessCount+stats.FailureCount),
 		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
-	fmt.Printf("- **Disk usage**: %s\n", stats.DiskUsage)
+	fmt.Printf("- **Disk usage**: %s\n", formatSize(stats.DiskUsage))
 
 	// Show running runs if any
 	if stats.RunningCount > 0 {
