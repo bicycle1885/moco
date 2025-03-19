@@ -3,15 +3,17 @@ package cmd
 import (
 	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/experiment"
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	runCmd := &cobra.Command{
-		Use:          "run [command]",
-		Aliases:      []string{"r"},
-		SilenceUsage: true,
-		Short:        "Run a command in an experiment directory with metadata tracking",
+		Use:           "run [command]",
+		Aliases:       []string{"r"},
+		SilenceErrors: true,
+		SilenceUsage:  true,
+		Short:         "Run a command in an experiment directory with metadata tracking",
 		Long: `Run a command with full reproducibility tracking.
 
 This command will:
@@ -39,13 +41,18 @@ and git commit hash to ensure traceability.`,
 			cleanupOnFail, _ := cmd.Flags().GetBool("cleanup-on-fail")
 
 			// Execute the command with experiment tracking
-			return experiment.Run(experiment.RunOptions{
+			if err := experiment.Run(experiment.RunOptions{
 				Command:       args,
 				Force:         force,
 				BaseDir:       baseDir,
 				NoPushd:       noPushd,
 				CleanupOnFail: cleanupOnFail,
-			})
+			}); err != nil {
+				log.Errorf("Failed to run: %v", err)
+				return err
+			}
+
+			return nil
 		},
 	}
 

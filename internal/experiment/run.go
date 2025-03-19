@@ -14,6 +14,7 @@ import (
 	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/git"
 	"github.com/bicycle1885/moco/internal/utils"
+	"github.com/charmbracelet/log"
 )
 
 // RunOptions contains options for running an experiment
@@ -102,7 +103,7 @@ func Run(opts RunOptions) error {
 	cmd.Stderr = io.MultiWriter(os.Stderr, stderrFile)
 
 	// Start the command
-	fmt.Printf("Running command in %s: %s\n", expDir, strings.Join(opts.Command, " "))
+	log.Info(fmt.Sprintf("Starting command in %s: %s", expDir, strings.Join(opts.Command, " ")))
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to start command: %w", err)
 	}
@@ -126,16 +127,23 @@ func Run(opts RunOptions) error {
 		}
 	case sig := <-signalChan:
 		interrupted = true
-		fmt.Printf("Received signal: %v\n", sig)
+		log.Warnf("Received signal: %v", sig)
 
 		if cmd.Process != nil {
 			if err := cmd.Process.Signal(sig); err != nil {
-				fmt.Printf("Failed to send signal to process: %v\n", err)
+				log.Errorf("Failed to send signal to process: %v", err)
 			}
 		}
 
 		<-doneChan
 		exitCode = 130 // Convention for interrupted commands
+	}
+
+	if exitCode == 0 {
+		log.Info("Command finished successfully")
+	} else {
+
+		log.Infof("Command finished with exit code %d", exitCode)
 	}
 
 	// Record execution results
@@ -146,7 +154,7 @@ func Run(opts RunOptions) error {
 
 	// Handle cleanup on failure
 	if exitCode != 0 && opts.CleanupOnFail {
-		fmt.Printf("Command failed. Cleaning up directory: %s\n", expDir)
+		log.Infof("Cleaning up directory: %s", expDir)
 		os.RemoveAll(expDir)
 	}
 
