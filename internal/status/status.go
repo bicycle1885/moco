@@ -89,6 +89,13 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 			return nil
 		}
 
+		// Add directory size to total
+		size, err := dirSize(path)
+		if err != nil {
+			return fmt.Errorf("failed to get directory size: %w", err)
+		}
+		totalSize += size
+
 		// Check if it's a run directory
 		dirName := filepath.Base(path)
 		matches := pattern.FindStringSubmatch(dirName)
@@ -135,6 +142,21 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 	stats.DiskUsage = formatSize(totalSize)
 
 	return stats, nil
+}
+
+// dirSize computes the size of a directory
+func dirSize(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return err
+	})
+	return size, err
 }
 
 // formatSize formats a file size in bytes to human-readable format
