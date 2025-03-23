@@ -33,8 +33,7 @@ type Config struct {
 	} `toml:"list"`
 
 	Status struct {
-		Level  string `toml:"level"`
-		Format string `toml:"format"`
+		Level string `toml:"level"`
 	} `toml:"status"`
 
 	Config struct {
@@ -76,8 +75,7 @@ type config struct {
 	} `toml:"list"`
 
 	Status *struct {
-		Level  *string `toml:"level"`
-		Format *string `toml:"format"`
+		Level *string `toml:"level"`
 	} `toml:"status"`
 
 	Config *struct {
@@ -118,7 +116,6 @@ limit = 0
 
 [status]
 level = "normal"
-format = "text"
 
 [config]
 default = false
@@ -244,9 +241,6 @@ func merge(dst *Config, src config) {
 	if src.Status != nil {
 		if src.Status.Level != nil {
 			dst.Status.Level = *src.Status.Level
-		}
-		if src.Status.Format != nil {
-			dst.Status.Format = *src.Status.Format
 		}
 	}
 

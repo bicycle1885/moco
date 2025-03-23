@@ -1,7 +1,6 @@
 package status
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -43,17 +42,8 @@ func Show() error {
 		return fmt.Errorf("failed to get project statistics: %w", err)
 	}
 
-	// Display status based on format and detail level
-	switch cfg.Status.Format {
-	case "json":
-		return outputStatusJSON(repo, stats, level)
-	case "markdown":
-		return outputStatusMarkdown(repo, stats, level)
-	case "text":
-		return outputStatusText(repo, stats, level)
-	default:
-		return fmt.Errorf("unknown output format: %s", cfg.Status.Format)
-	}
+	// Display status based on detail level
+	return outputStatusText(repo, stats, level)
 }
 
 // getProjectStats computes statistics about runs
@@ -202,101 +192,6 @@ func outputStatusText(repo git.RepoStatus, stats ProjectStats, detailLevel strin
 			status := statusString(run)
 			fmt.Printf("  • %s\n    Status: %s\n    Command: %s\n    Duration: %s\n",
 				run.Directory, status, run.Command, run.Duration)
-		}
-	}
-
-	return nil
-}
-
-// outputStatusJSON outputs status in JSON format
-func outputStatusJSON(repo git.RepoStatus, stats ProjectStats, detailLevel string) error {
-	// Create a structure for the full status
-	status := struct {
-		Git struct {
-			Branch        string    `json:"branch"`
-			CommitHash    string    `json:"commit_hash"`
-			FullHash      string    `json:"full_hash,omitempty"`
-			IsDirty       bool      `json:"is_dirty"`
-			CommitMessage string    `json:"commit_message,omitempty"`
-			CommitAuthor  string    `json:"commit_author,omitempty"`
-			CommitDate    time.Time `json:"commit_date,omitempty"`
-		} `json:"git"`
-		Stats ProjectStats `json:"stats"`
-	}{
-		Stats: stats,
-	}
-
-	// Fill git info
-	status.Git.Branch = repo.Branch
-	status.Git.CommitHash = repo.ShortHash
-	status.Git.IsDirty = repo.IsDirty
-
-	// Add detailed info if requested
-	if detailLevel != "minimal" {
-		status.Git.FullHash = repo.FullHash
-	}
-
-	if detailLevel == "full" {
-		status.Git.CommitMessage = repo.CommitMessage
-		status.Git.CommitAuthor = repo.CommitAuthor
-		status.Git.CommitDate = repo.CommitDate
-	}
-
-	// Remove recent runs if minimal detail level
-	if detailLevel == "minimal" {
-		status.Stats.RecentRuns = nil
-	}
-
-	// Marshal to JSON
-	data, err := json.MarshalIndent(status, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal JSON: %w", err)
-	}
-
-	fmt.Println(string(data))
-	return nil
-}
-
-// outputStatusMarkdown outputs status in Markdown format
-func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel string) error {
-	// Output git information
-	fmt.Println("# Moco Project Status")
-
-	fmt.Println("\n## Git Repository Status")
-	fmt.Printf("- **Branch**: `%s`\n", repo.Branch)
-	fmt.Printf("- **Commit**: `%s`\n", repo.ShortHash)
-	if repo.IsDirty {
-		fmt.Println("- **Status**: Dirty (has uncommitted changes)")
-	} else {
-		fmt.Println("- **Status**: Clean")
-	}
-
-	// Output basic project stats
-	fmt.Println("\n## Project Statistics")
-	fmt.Printf("- **Total runs**: %d\n", stats.TotalRuns)
-	fmt.Printf("- **Success rate**: %.1f%% (%d/%d)\n",
-		percentOrZero(stats.SuccessCount, stats.SuccessCount+stats.FailureCount),
-		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
-	fmt.Printf("- **Disk usage**: %s\n", formatSize(stats.DiskUsage))
-
-	// Show recent runs if requested
-	if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
-		fmt.Println("\n## Recent Runs")
-		for _, run := range stats.RecentRuns[:min(maxRecentRuns, len(stats.RecentRuns))] {
-			fmt.Printf("\n### %s\n", run.Directory)
-			fmt.Printf("- **Status**: %s\n", statusString(run))
-			fmt.Printf("- **Command**: `%s`\n", run.Command)
-			fmt.Printf("- **Duration**: %s\n", run.Duration)
-		}
-	}
-
-	// Show detailed info if requested
-	if detailLevel == "full" {
-		fmt.Println("\n## Detailed Git Information")
-		if repo.CommitMessage != "" {
-			fmt.Printf("- **Last commit**: %s\n", strings.Split(repo.CommitMessage, "\n")[0])
-			fmt.Printf("- **Author**: %s\n", repo.CommitAuthor)
-			fmt.Printf("- **Date**: %s\n", repo.CommitDate.Format(time.RFC1123))
 		}
 	}
 
