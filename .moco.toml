@@ -1,16 +1,18 @@
 # .moco.toml
-
-[paths]
 base_dir = "runs"
 summary_file = "summary.md"
-stdout_file = "stdout.log"
-stderr_file = "stderr.log"
 
 [run]
 force = false
 cleanup_on_fail = false
 no_pushd = false
+stdout_file = "stdout.log"
+stderr_file = "stderr.log"
+
+[status]
+level = "normal"
+format = "text"
 
 [archive]
 format = "tar.gz"
-older_than = "30d"
+destination = "archives"
