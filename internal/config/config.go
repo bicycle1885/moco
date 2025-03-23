@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -24,6 +25,10 @@ type Config struct {
 		Level  string `toml:"level"`
 		Format string `toml:"format"`
 	} `toml:"status"`
+
+	Config struct {
+		Default bool `toml:"default"`
+	} `toml:"config"`
 
 	Archive struct {
 		Format      string `toml:"format"`
@@ -49,6 +54,10 @@ type config struct {
 		Format *string `toml:"format"`
 	} `toml:"status"`
 
+	Config *struct {
+		Default *bool `toml:"default"`
+	} `toml:"config"`
+
 	Archive *struct {
 		Format      *string `toml:"format"`
 		Destination *string `toml:"destination"`
@@ -70,6 +79,9 @@ stderr_file = "stderr.log"
 [status]
 level = "normal"
 format = "text"
+
+[config]
+default = false
 
 [archive]
 format = "tar.gz"
@@ -126,6 +138,11 @@ func GetDefaultConfig() Config {
 	return result
 }
 
+func ShowConfig(config Config) {
+	b, _ := toml.Marshal(config)
+	fmt.Print(string(b))
+}
+
 // mergeConfig merges the src configuration into the dst configuration
 func mergeConfig(dst *Config, src config) {
 	if src.BaseDir != nil {
@@ -159,6 +176,12 @@ func mergeConfig(dst *Config, src config) {
 		}
 		if src.Status.Format != nil {
 			dst.Status.Format = *src.Status.Format
+		}
+	}
+
+	if src.Config != nil {
+		if src.Config.Default != nil {
+			dst.Config.Default = *src.Config.Default
 		}
 	}
 
