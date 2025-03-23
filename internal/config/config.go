@@ -134,61 +134,61 @@ dry_run = false
 
 var globalConfig Config
 
-// InitConfig loads configuration from files
-func InitConfig() error {
+// Init loads configuration from files
+func Init() error {
 	// Set defaults
-	config, _ := loadConfigData([]byte(defaultConfig))
-	mergeConfig(&globalConfig, config)
+	config, _ := loadData([]byte(defaultConfig))
+	merge(&globalConfig, config)
 
 	// Check for user-level config
 	configDir, err := os.UserConfigDir()
 	if err == nil {
 		userConfig := filepath.Join(configDir, "moco", "config.toml")
 		if _, err := os.Stat(userConfig); err == nil {
-			config, err := loadConfigFile(userConfig)
+			config, err := loadFile(userConfig)
 			if err != nil {
 				return err
 			}
-			mergeConfig(&globalConfig, config)
+			merge(&globalConfig, config)
 		}
 	}
 
 	// Check for project-level config
 	if _, err := os.Stat(".moco.toml"); err == nil {
-		config, err := loadConfigFile(".moco.toml")
+		config, err := loadFile(".moco.toml")
 		if err != nil {
 			return err
 		}
-		mergeConfig(&globalConfig, config)
+		merge(&globalConfig, config)
 	}
 
 	return nil
 }
 
-// GetConfig returns the current configuration
-func GetConfig() Config {
+// Get returns the current configuration
+func Get() Config {
 	return globalConfig
 }
 
-func GetConfigPointer() *Config {
+func GetPointer() *Config {
 	return &globalConfig
 }
 
-// GetDefaultConfig returns the default configuration
-func GetDefaultConfig() Config {
-	config, _ := loadConfigData([]byte(defaultConfig))
+// GetDefault returns the default configuration
+func GetDefault() Config {
+	config, _ := loadData([]byte(defaultConfig))
 	result := Config{}
-	mergeConfig(&result, config)
+	merge(&result, config)
 	return result
 }
 
-func ShowConfig(config Config) {
+func Show(config Config) {
 	b, _ := toml.Marshal(config)
 	fmt.Print(string(b))
 }
 
-// mergeConfig merges the src configuration into the dst configuration
-func mergeConfig(dst *Config, src config) {
+// merge merges the src configuration into the dst configuration
+func merge(dst *Config, src config) {
 	if src.BaseDir != nil {
 		dst.BaseDir = *src.BaseDir
 	}
@@ -278,15 +278,15 @@ func mergeConfig(dst *Config, src config) {
 	}
 }
 
-func loadConfigFile(path string) (config, error) {
+func loadFile(path string) (config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return config{}, err
 	}
-	return loadConfigData(data)
+	return loadData(data)
 }
 
-func loadConfigData(data []byte) (config, error) {
+func loadData(data []byte) (config, error) {
 	config := config{}
 	err := toml.Unmarshal(data, &config)
 	return config, err

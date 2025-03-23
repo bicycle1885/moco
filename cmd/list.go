@@ -23,7 +23,7 @@ Results can be sorted and formatted in different ways for easy analysis.`,
 	}
 
 	// Add flags
-	cfg := config.GetConfigPointer()
+	cfg := config.GetPointer()
 	listCmd.Flags().StringVarP(&cfg.List.Format, "format", "f", "", "Output format (table, json, csv)")
 	listCmd.Flags().StringVarP(&cfg.List.SortBy, "sort", "s", "", "Sort by (date, branch, status, duration)")
 	listCmd.Flags().BoolVarP(&cfg.List.Reverse, "reverse", "r", false, "Reverse sort order")

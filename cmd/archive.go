@@ -28,7 +28,7 @@ An archive index is maintained for easy reference to archived experiments.`,
 	}
 
 	// Add flags
-	cfg := config.GetConfigPointer()
+	cfg := config.GetPointer()
 	archiveCmd.Flags().StringVarP(&cfg.Archive.OlderThan, "older-than", "o", "",
 		"Archive experiments older than duration (e.g., '30d')")
 	archiveCmd.Flags().StringVarP(&cfg.Archive.Status, "status", "s", "",

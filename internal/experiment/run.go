@@ -20,7 +20,7 @@ import (
 // Run executes a command with experiment tracking
 func Run(commands []string) error {
 	// Get config
-	cfg := config.GetConfig()
+	cfg := config.Get()
 
 	// Check git repository status
 	repo, err := git.GetRepoStatus()

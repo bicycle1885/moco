@@ -21,7 +21,7 @@ import (
 // Run archives experiments
 func Run(runs []string) error {
 	// Get config
-	cfg := config.GetConfig()
+	cfg := config.Get()
 
 	// Validate format
 	if cfg.Archive.Format != "tar.gz" && cfg.Archive.Format != "zip" {
@@ -108,7 +108,7 @@ func filterRunsToArchive(runDirs []string, cutoff time.Time, status string) []ut
 	var results []utils.RunInfo
 
 	// Get configuration
-	cfg := config.GetConfig()
+	cfg := config.Get()
 
 	// Check each run directory
 	for _, runDir := range runDirs {

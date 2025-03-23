@@ -11,16 +11,16 @@ func init() {
 		Aliases: []string{"co"},
 		Short:   "Show configuration settings",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg := config.GetConfig()
+			cfg := config.Get()
 			if cfg.Config.Default {
-				cfg = config.GetDefaultConfig()
+				cfg = config.GetDefault()
 			}
-			config.ShowConfig(cfg)
+			config.Show(cfg)
 			return nil
 		},
 	}
 
-	cfg := config.GetConfigPointer()
+	cfg := config.GetPointer()
 	configCmd.Flags().BoolVarP(&cfg.Config.Default, "default", "", false, "Show the default configuration")
 	rootCmd.AddCommand(configCmd)
 }

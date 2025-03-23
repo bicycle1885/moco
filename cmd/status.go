@@ -26,7 +26,7 @@ The level of detail and output format can be customized.`,
 	}
 
 	// Add flags
-	cfg := config.GetConfigPointer()
+	cfg := config.GetPointer()
 	statusCmd.Flags().StringVarP(&cfg.Status.Level, "level", "l", "normal", "Level of detail (minimal, normal, full)")
 	statusCmd.Flags().StringVarP(&cfg.Status.Format, "format", "f", "text", "Output format (text, json, markdown)")
 

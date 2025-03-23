@@ -33,7 +33,7 @@ and git commit hash to ensure traceability.`,
 	}
 
 	// Add flags
-	cfg := config.GetConfigPointer()
+	cfg := config.GetPointer()
 	runCmd.Flags().StringVarP(&cfg.BaseDir, "dir", "d", "",
 		"Base directory for experiment output")
 	runCmd.Flags().BoolVarP(&cfg.Run.Force, "force", "f", false,

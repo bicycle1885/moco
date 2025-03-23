@@ -10,7 +10,7 @@ import (
 
 func main() {
 	// Initialize configuration
-	if err := config.InitConfig(); err != nil {
+	if err := config.Init(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error initializing configuration: %v\n", err)
 		os.Exit(1)
 	}

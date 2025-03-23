@@ -27,7 +27,7 @@ type ProjectStats struct {
 // Show displays project status
 func Show() error {
 	// Get config and repository status
-	cfg := config.GetConfig()
+	cfg := config.Get()
 	repo, err := git.GetRepoStatus()
 	if err != nil {
 		return fmt.Errorf("failed to get git status: %w", err)
@@ -65,7 +65,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 	}
 
 	// Get config
-	cfg := config.GetConfig()
+	cfg := config.Get()
 
 	// Pattern for runs directories
 	pattern := regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3})_(.+)_([a-f0-9]{7})$`)

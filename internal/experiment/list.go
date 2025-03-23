@@ -21,7 +21,7 @@ import (
 // List displays and filters runs
 func List() error {
 	// Get config
-	cfg := config.GetConfig()
+	cfg := config.Get()
 
 	// Find all runs
 	runs, err := findRuns(cfg.BaseDir)
@@ -85,7 +85,7 @@ func findRuns(baseDir string) ([]utils.RunInfo, error) {
 	}
 
 	// Get configuration
-	cfg := config.GetConfig()
+	cfg := config.Get()
 
 	// Check each entry
 	for _, entry := range entries {
