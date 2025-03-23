@@ -62,35 +62,13 @@ func TestParseRunInfo(t *testing.T) {
 		assert.False(t, info.Interrupted)
 	})
 
-	/*
-			t.Run("Interrupted run", func(t *testing.T) {
-				summaryContent := `# Experiment Summary
-
-		## Metadata
-		- **Execution datetime**: 2023-01-02T15:04:05
-		- **Branch**: ` + "`main`" + `
-		- **Commit hash**: ` + "`abcd1234`" + `
-		- **Command**: ` + "`go test ./...`" + `
-		- **Hostname**: ` + "`test-host`" + `
-		- **Working directory**: ` + "`runs/2023-01-02T15:04:05.000_main_abcd1234`" + `
-
-		## Execution Results
-		- **Execution finished**: 2023-01-02T15:05:05
-		- **Execution time**: 1m0s
-		- **Exit status**: 130
-		- **Terminated by user**
-		`
-
-				summaryPath := filepath.Join(tempDir, "summary_interrupted.md")
-				err := os.WriteFile(summaryPath, []byte(summaryContent), 0644)
-				assert.NoError(t, err)
-
-				info, err := utils.ParseRunInfo(summaryPath)
-				assert.NoError(t, err)
-				assert.Equal(t, 130, info.ExitStatus)
-				assert.True(t, info.Interrupted)
-			})
-	*/
+	t.Run("Interrupted run", func(t *testing.T) {
+		summaryPath := filepath.Join("testdata", "summary_interrupted.md")
+		info, err := utils.ParseRunInfo(summaryPath)
+		assert.NoError(t, err)
+		assert.Equal(t, 130, info.ExitStatus)
+		assert.True(t, info.Interrupted)
+	})
 
 	t.Run("Non-existent file", func(t *testing.T) {
 		nonExistentPath := filepath.Join(tempDir, "non_existent.md")
