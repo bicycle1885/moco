@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/bicycle1885/moco/internal/git"
 	"github.com/bicycle1885/moco/internal/utils"
 )
 
@@ -20,7 +19,7 @@ func TestWriteSummaryFileInit(t *testing.T) {
 		summaryPath := filepath.Join(tempDir, "summary.md")
 		startTime, _ := time.Parse("2006-01-02T15:04:05", "2023-01-02T15:04:05")
 		endTime, _ := time.Parse("2006-01-02T15:04:05", "2023-01-02T15:05:05")
-		repo := git.RepoStatus{
+		repo := utils.RepoStatus{
 			Branch: "main",
 		}
 		commmand := []string{"sleep", "5"}

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/bicycle1885/moco/internal/config"
-	"github.com/bicycle1885/moco/internal/git"
 	"github.com/bicycle1885/moco/internal/utils"
 	"github.com/charmbracelet/log"
 )
@@ -23,7 +22,7 @@ func Run(commands []string) error {
 	cfg := config.Get()
 
 	// Check git repository status
-	repo, err := git.GetRepoStatus()
+	repo, err := utils.GetRepoStatus()
 	if err != nil {
 		return fmt.Errorf("git repository error: %w", err)
 	}
@@ -46,7 +45,7 @@ func Run(commands []string) error {
 
 	// Create unique experiment directory
 	startTime := time.Now()
-	dirName := fmt.Sprintf("%s_%s_%s", startTime.Format("2006-01-02T15:04:05.000"), git.SanitizeBranchName(repo.Branch), repo.ShortHash)
+	dirName := fmt.Sprintf("%s_%s_%s", startTime.Format("2006-01-02T15:04:05.000"), utils.SanitizeBranchName(repo.Branch), repo.ShortHash)
 	expDir := filepath.Join(baseDir, dirName)
 
 	log.Infof("Creating experiment directory: %s", expDir)

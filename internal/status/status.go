@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/bicycle1885/moco/internal/config"
-	"github.com/bicycle1885/moco/internal/git"
 	"github.com/bicycle1885/moco/internal/utils"
 	"github.com/charmbracelet/log"
 )
@@ -31,7 +30,7 @@ const maxRecentRuns = 5
 func Show() error {
 	// Get config and repository status
 	cfg := config.Get()
-	repo, err := git.GetRepoStatus()
+	repo, err := utils.GetRepoStatus()
 	if err != nil {
 		return fmt.Errorf("failed to get git status: %w", err)
 	}
@@ -158,7 +157,7 @@ func formatSize(bytes int64) string {
 }
 
 // outputStatusText outputs status in text format
-func outputStatusText(repo git.RepoStatus, stats ProjectStats, detailLevel string) error {
+func outputStatusText(repo utils.RepoStatus, stats ProjectStats, detailLevel string) error {
 	// Output git information
 	fmt.Println("Git Repository Status:")
 	fmt.Printf("  Branch: %s\n", repo.Branch)

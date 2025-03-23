@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/bicycle1885/moco/internal/git"
 )
 
 // Timezone is indispensable for correct parsing of timestamps
@@ -48,7 +46,7 @@ func (r *RunInfo) Duration() string {
 	return formatDuration(d)
 }
 
-func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo git.RepoStatus, command []string) error {
+func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo RepoStatus, command []string) error {
 	// Get hostname
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -59,19 +57,19 @@ func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo git.Repo
 	directry, _ := filepath.Split(summaryPath)
 
 	// Get git commit details
-	commitDetails, err := git.GetCommitDetails()
+	commitDetails, err := GetCommitDetails()
 	if err != nil {
 		commitDetails = "Error retrieving commit details"
 	}
 
 	// Get git status
-	gitStatus, err := git.GetRepoStatus()
+	gitStatus, err := GetRepoStatus()
 	if err != nil {
-		gitStatus = git.RepoStatus{IsValid: false}
+		gitStatus = RepoStatus{IsValid: false}
 	}
 
 	// Get git diff
-	gitDiff, err := git.GetUncommittedChanges()
+	gitDiff, err := GetUncommittedChanges()
 	if err != nil {
 		gitDiff = "Error retrieving uncommitted changes"
 	}
@@ -145,7 +143,7 @@ func getSystemInfo() string {
 }
 
 // formatGitStatus converts git status to a string for display
-func formatGitStatus(repo git.RepoStatus) string {
+func formatGitStatus(repo RepoStatus) string {
 	if !repo.IsValid {
 		return "Not a valid git repository"
 	}
