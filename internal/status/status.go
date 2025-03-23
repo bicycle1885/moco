@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -16,13 +17,15 @@ import (
 
 // ProjectStats contains project statistics
 type ProjectStats struct {
-	TotalRuns    int             `json:"total_runs"`
-	SuccessCount int             `json:"success_count"`
-	FailureCount int             `json:"failure_count"`
-	RunningCount int             `json:"running_count"`
 	DiskUsage    int64           `json:"disk_usage"`
+	RunningCount int             `json:"running_count"`
+	FailureCount int             `json:"failure_count"`
+	SuccessCount int             `json:"success_count"`
+	TotalRuns    int             `json:"total_runs"`
 	RecentRuns   []utils.RunInfo `json:"recent_runs,omitempty"`
 }
+
+const maxRecentRuns = 5
 
 // Show displays project status
 func Show() error {
@@ -35,7 +38,7 @@ func Show() error {
 
 	// Get project statistics
 	level := cfg.Status.Level
-	stats, err := getProjectStats(cfg.BaseDir, level != "minimal")
+	stats, err := getProjectStats(cfg.BaseDir)
 	if err != nil {
 		return fmt.Errorf("failed to get project statistics: %w", err)
 	}
@@ -54,7 +57,7 @@ func Show() error {
 }
 
 // getProjectStats computes statistics about runs
-func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, error) {
+func getProjectStats(baseDir string) (ProjectStats, error) {
 	stats := ProjectStats{
 		RecentRuns: []utils.RunInfo{},
 	}
@@ -71,7 +74,6 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 	pattern := regexp.MustCompile(`^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3})_(.+)_([a-f0-9]{7})$`)
 
 	// Walk the base directory to gather stats
-	var totalSize int64
 	err := filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -80,7 +82,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 		// Skip if not a directory or if it's the base directory
 		if !info.IsDir() || path == baseDir {
 			if !info.IsDir() {
-				totalSize += info.Size() // Add file size to total
+				stats.DiskUsage += info.Size() // Add file size to total
 			}
 			return nil
 		}
@@ -90,7 +92,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 		if err != nil {
 			return fmt.Errorf("failed to get directory size: %w", err)
 		}
-		totalSize += size
+		stats.DiskUsage += size
 
 		// Check if it's a run directory
 		dirName := filepath.Base(path)
@@ -99,31 +101,14 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 			return nil // Not a run directory
 		}
 
-		// It's a run directory
-		stats.TotalRuns++
-
 		// Parse summary file for status
 		summaryPath := filepath.Join(path, cfg.SummaryFile)
 		runInfo, err := utils.ParseRunInfo(summaryPath)
 		if err != nil {
-			// TODO: fix this
-			// If we can't parse the summary, assume it's still running
-			stats.RunningCount++
 			return nil
 		}
 
-		if runInfo.IsRunning {
-			stats.RunningCount++
-		} else if runInfo.ExitStatus == 0 {
-			stats.SuccessCount++
-		} else {
-			stats.FailureCount++
-		}
-
-		// Add to recent runs if requested
-		if includeRecentRuns && len(stats.RecentRuns) < 5 {
-			stats.RecentRuns = append(stats.RecentRuns, runInfo)
-		}
+		stats.RecentRuns = append(stats.RecentRuns, runInfo)
 
 		// Don't recurse into run directories
 		return filepath.SkipDir
@@ -133,7 +118,20 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 		return stats, fmt.Errorf("error walking directory: %w", err)
 	}
 
-	stats.DiskUsage = totalSize
+	// Count running, success, and failure runs
+	for _, run := range stats.RecentRuns {
+		stats.TotalRuns++
+		if run.IsRunning {
+			stats.RunningCount++
+		} else if run.ExitStatus == 0 {
+			stats.SuccessCount++
+		} else {
+			stats.FailureCount++
+		}
+	}
+
+	// Reverse the list to show most recent runs first
+	slices.Reverse(stats.RecentRuns)
 
 	return stats, nil
 }
@@ -179,6 +177,16 @@ func outputStatusText(repo git.RepoStatus, stats ProjectStats, detailLevel strin
 		fmt.Println("  Status: Clean")
 	}
 
+	// Show detailed info if requested
+	if detailLevel == "full" {
+		fmt.Println("\nDetailed Git Information:")
+		if repo.CommitMessage != "" {
+			fmt.Printf("  Last commit: %s\n", strings.Split(repo.CommitMessage, "\n")[0])
+			fmt.Printf("  Author: %s\n", repo.CommitAuthor)
+			fmt.Printf("  Date: %s\n", repo.CommitDate.Format(time.RFC1123))
+		}
+	}
+
 	// Output basic project stats
 	fmt.Println("\nProject Statistics:")
 	fmt.Printf("  Total runs: %d\n", stats.TotalRuns)
@@ -187,43 +195,13 @@ func outputStatusText(repo git.RepoStatus, stats ProjectStats, detailLevel strin
 		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
 	fmt.Printf("  Disk usage: %s\n", formatSize(stats.DiskUsage))
 
-	// Show running runs if any
-	if stats.RunningCount > 0 {
-		fmt.Printf("\nRunning runs: %d\n", stats.RunningCount)
-
-		if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
-			for _, run := range stats.RecentRuns {
-				if run.IsRunning {
-					elapsed := time.Since(run.StartTime).Round(time.Second)
-					fmt.Printf("  • %s (Running for %s)\n    Command: %s\n",
-						run.Directory, elapsed, run.Command)
-				}
-			}
-		}
-	}
-
-	// Show recent completed runs if requested
+	// Show recent runs if requested
 	if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
 		fmt.Println("\nRecent Runs:")
-		for _, run := range stats.RecentRuns {
-			if !run.IsRunning {
-				status := "Success"
-				if run.ExitStatus != 0 {
-					status = fmt.Sprintf("Failed (exit: %d)", run.ExitStatus)
-				}
-				fmt.Printf("  • %s (%s)\n    Command: %s\n    Duration: %s\n",
-					run.Directory, status, run.Command, run.Duration)
-			}
-		}
-	}
-
-	// Show detailed info if requested
-	if detailLevel == "full" {
-		fmt.Println("\nDetailed Git Information:")
-		if repo.CommitMessage != "" {
-			fmt.Printf("  Last commit: %s\n", strings.Split(repo.CommitMessage, "\n")[0])
-			fmt.Printf("  Author: %s\n", repo.CommitAuthor)
-			fmt.Printf("  Date: %s\n", repo.CommitDate.Format(time.RFC1123))
+		for _, run := range stats.RecentRuns[:min(maxRecentRuns, len(stats.RecentRuns))] {
+			status := statusString(run)
+			fmt.Printf("  • %s\n    Status: %s\n    Command: %s\n    Duration: %s\n",
+				run.Directory, status, run.Command, run.Duration)
 		}
 	}
 
@@ -301,38 +279,14 @@ func outputStatusMarkdown(repo git.RepoStatus, stats ProjectStats, detailLevel s
 		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
 	fmt.Printf("- **Disk usage**: %s\n", formatSize(stats.DiskUsage))
 
-	// Show running runs if any
-	if stats.RunningCount > 0 {
-		fmt.Printf("\n## Running runs: %d\n", stats.RunningCount)
-
-		if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
-			for _, run := range stats.RecentRuns {
-				if run.IsRunning {
-					elapsed := time.Since(run.StartTime).Round(time.Second)
-					fmt.Printf("\n### %s\n", run.Directory)
-					fmt.Printf("- **Running for**: %s\n", elapsed)
-					fmt.Printf("- **Command**: `%s`\n", run.Command)
-					fmt.Printf("- **Branch**: `%s`\n", run.Branch)
-				}
-			}
-		}
-	}
-
 	// Show recent runs if requested
 	if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
 		fmt.Println("\n## Recent Runs")
-		for _, run := range stats.RecentRuns {
-			if !run.IsRunning {
-				status := "Success"
-				if run.ExitStatus != 0 {
-					status = fmt.Sprintf("Failed (exit: %d)", run.ExitStatus)
-				}
-				fmt.Printf("\n### %s\n", run.Directory)
-				fmt.Printf("- **Status**: %s\n", status)
-				fmt.Printf("- **Command**: `%s`\n", run.Command)
-				fmt.Printf("- **Duration**: %s\n", run.Duration)
-				fmt.Printf("- **Branch**: `%s`\n", run.Branch)
-			}
+		for _, run := range stats.RecentRuns[:min(maxRecentRuns, len(stats.RecentRuns))] {
+			fmt.Printf("\n### %s\n", run.Directory)
+			fmt.Printf("- **Status**: %s\n", statusString(run))
+			fmt.Printf("- **Command**: `%s`\n", run.Command)
+			fmt.Printf("- **Duration**: %s\n", run.Duration)
 		}
 	}
 
@@ -355,4 +309,14 @@ func percentOrZero(numerator, denominator int) float64 {
 		return 0
 	}
 	return 100.0 * float64(numerator) / float64(denominator)
+}
+
+func statusString(run utils.RunInfo) string {
+	if run.IsRunning {
+		return "Running"
+	} else if run.ExitStatus == 0 {
+		return "Success"
+	} else {
+		return fmt.Sprintf("Failed (exit: %d)", run.ExitStatus)
+	}
 }
