@@ -77,26 +77,20 @@ func GetRepoStatus() (RepoStatus, error) {
 
 // GetCommitDetails returns detailed information about the last commit
 func GetCommitDetails() (string, error) {
-	repo, err := git.PlainOpen(".")
-	if err != nil {
-		return "", fmt.Errorf("failed to open git repository: %w", err)
+	// We'll execute git show command for simplicity
+	// While it's possible to do this with go-git, the formatting would be complex
+	cmd := exec.Command("git", "show")
+	var output strings.Builder
+	cmd.Stdout = &output
+
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("failed to run git show: %w", err)
 	}
 
-	head, err := repo.Head()
-	if err != nil {
-		return "", fmt.Errorf("failed to get HEAD reference: %w", err)
+	details := output.String()
+	if details == "" {
+		details = "[No commit details]"
 	}
-
-	commit, err := repo.CommitObject(head.Hash())
-	if err != nil {
-		return "", fmt.Errorf("failed to get commit object: %w", err)
-	}
-
-	// Format commit details
-	details := fmt.Sprintf("commit %s\n", head.Hash())
-	details += fmt.Sprintf("Author: %s <%s>\n", commit.Author.Name, commit.Author.Email)
-	details += fmt.Sprintf("Date:   %s\n\n", commit.Author.When.Format(time.RFC1123Z))
-	details += fmt.Sprintf("    %s\n", commit.Message)
 
 	return details, nil
 }
