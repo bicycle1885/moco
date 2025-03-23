@@ -105,7 +105,7 @@ func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo RepoStat
 	b.WriteString("```\n")
 
 	// Uncommitted changes
-	b.WriteString("\n## Uncommitted Changes (Diff)\n")
+	b.WriteString("\n## Uncommitted Changes\n")
 	b.WriteString("```diff\n")
 	b.WriteString(gitDiff)
 	b.WriteString("```\n")
