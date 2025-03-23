@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/bicycle1885/moco/internal/config"
-	"github.com/bicycle1885/moco/internal/experiment"
+	"github.com/bicycle1885/moco/internal/run"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +28,7 @@ and git commit hash to ensure traceability.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Execute the command with experiment tracking
-			return experiment.Run(args)
+			return run.Run(args)
 		},
 	}
 

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/bicycle1885/moco/internal/config"
-	"github.com/bicycle1885/moco/internal/experiment"
+	"github.com/bicycle1885/moco/internal/list"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ various criteria such as branch name, status, date, and command pattern.
 Results can be sorted and formatted in different ways for easy analysis.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// List experiments
-			return experiment.List()
+			return list.List()
 		},
 	}
 

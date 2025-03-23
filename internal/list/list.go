@@ -1,4 +1,4 @@
-package experiment
+package list
 
 import (
 	"encoding/csv"
