@@ -34,8 +34,6 @@ and git commit hash to ensure traceability.`,
 
 	// Add flags
 	cfg := config.GetPointer()
-	runCmd.Flags().StringVarP(&cfg.BaseDir, "dir", "d", "",
-		"Base directory for experiment output")
 	runCmd.Flags().BoolVarP(&cfg.Run.Force, "force", "f", false,
 		"Allow experiments to run with uncommitted changes")
 	runCmd.Flags().BoolVarP(&cfg.Run.NoPushd, "no-pushd", "n", false,
