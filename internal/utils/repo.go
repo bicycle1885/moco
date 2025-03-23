@@ -73,6 +73,9 @@ func GetRepoStatus() (RepoStatus, error) {
 
 	status.IsDirty = !wStatus.IsClean()
 	status.StatusString = wStatus.String()
+	if status.StatusString == "" {
+		status.StatusString = "[No uncommitted changes or untracked files]\n"
+	}
 
 	return status, nil
 }
