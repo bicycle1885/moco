@@ -104,6 +104,10 @@ func GetConfig() Config {
 	return globalConfig
 }
 
+func GetConfigPointer() *Config {
+	return &globalConfig
+}
+
 // GetDefaultConfig returns the default configuration
 func GetDefaultConfig() Config {
 	config, _ := loadConfigData([]byte(defaultConfig))

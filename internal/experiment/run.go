@@ -17,16 +17,8 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// RunOptions contains options for running an experiment
-type RunOptions struct {
-	BaseDir       string
-	Force         bool
-	NoPushd       bool
-	CleanupOnFail bool
-}
-
 // Run executes a command with experiment tracking
-func Run(commands []string, opts RunOptions) error {
+func Run(commands []string) error {
 	// Get config
 	cfg := config.GetConfig()
 
@@ -37,14 +29,14 @@ func Run(commands []string, opts RunOptions) error {
 	}
 
 	// Validate git status
-	if repo.IsDirty && !opts.Force {
+	if repo.IsDirty && !cfg.Run.Force {
 		return fmt.Errorf("git repository has uncommitted changes, use --force to run anyway")
 	}
 
 	// Create experiment directory with millisecond timestamp
-	baseDir := opts.BaseDir
+	baseDir := cfg.Paths.BaseDir
 	if baseDir == "" {
-		baseDir = cfg.Paths.BaseDir
+		return fmt.Errorf("base directory not set in configuration")
 	}
 
 	// Ensure base directory exists
@@ -81,7 +73,7 @@ func Run(commands []string, opts RunOptions) error {
 	cmd := exec.Command(commands[0], commands[1:]...)
 
 	// Set working directory if required
-	if !opts.NoPushd {
+	if !cfg.Run.NoPushd {
 		cmd.Dir = expDir
 	}
 
@@ -161,7 +153,7 @@ func Run(commands []string, opts RunOptions) error {
 	}
 
 	// Handle cleanup on failure
-	if exitCode != 0 && opts.CleanupOnFail {
+	if exitCode != 0 && cfg.Run.CleanupOnFail {
 		log.Infof("Cleaning up directory: %s", expDir)
 		os.RemoveAll(expDir)
 	}
