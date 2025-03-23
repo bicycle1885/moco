@@ -92,29 +92,29 @@ func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo RepoStat
 	fmt.Fprintf(&b, "- **Hostname**: `%s`\n", hostname)
 	fmt.Fprintf(&b, "- **Working directory**: `%s`\n", directry)
 
-	// Commit details
-	b.WriteString("\n## Latest Commit Details\n")
-	b.WriteString("```diff\n")
-	b.WriteString(commitDetails)
-	b.WriteString("\n```\n")
-
 	// Git status
 	b.WriteString("\n## Git Status\n")
 	b.WriteString("```\n")
-	b.WriteString(formatGitStatus(gitStatus))
-	b.WriteString("\n```\n")
+	b.WriteString(gitStatus.StatusString)
+	b.WriteString("```\n")
 
-	// Git diff
+	// Latest commit details
+	b.WriteString("\n## Latest Commit Details\n")
+	b.WriteString("```diff\n")
+	b.WriteString(commitDetails)
+	b.WriteString("```\n")
+
+	// Uncommitted changes
 	b.WriteString("\n## Uncommitted Changes (Diff)\n")
 	b.WriteString("```diff\n")
 	b.WriteString(gitDiff)
-	b.WriteString("\n```\n")
+	b.WriteString("```\n")
 
 	// System info
 	b.WriteString("\n## Environment Info\n")
 	b.WriteString("```\n")
 	b.WriteString(sysInfo)
-	b.WriteString("\n```\n")
+	b.WriteString("```\n")
 
 	// Create summary file
 	file, err := os.Create(summaryPath)

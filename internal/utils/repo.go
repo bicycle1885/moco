@@ -19,6 +19,7 @@ type RepoStatus struct {
 	CommitMessage string
 	CommitAuthor  string
 	CommitDate    time.Time
+	StatusString  string
 }
 
 // GetRepoStatus retrieves the current status of the Git repository
@@ -71,6 +72,7 @@ func GetRepoStatus() (RepoStatus, error) {
 	}
 
 	status.IsDirty = !wStatus.IsClean()
+	status.StatusString = wStatus.String()
 
 	return status, nil
 }
@@ -109,7 +111,7 @@ func GetUncommittedChanges() (string, error) {
 
 	diff := output.String()
 	if diff == "" {
-		diff = "[No uncommitted changes]"
+		diff = "[No uncommitted changes]\n"
 	}
 
 	return diff, nil
