@@ -14,12 +14,6 @@ import (
 	"github.com/bicycle1885/moco/internal/utils"
 )
 
-// Options defines status display options
-type Options struct {
-	DetailLevel string // Level of detail to show (minimal, normal, full)
-	Format      string // Output format (text, json, markdown)
-}
-
 // ProjectStats contains project statistics
 type ProjectStats struct {
 	TotalRuns    int             `json:"total_runs"`
@@ -31,7 +25,7 @@ type ProjectStats struct {
 }
 
 // Show displays project status
-func Show(opts Options) error {
+func Show() error {
 	// Get config and repository status
 	cfg := config.GetConfig()
 	repo, err := git.GetRepoStatus()
@@ -40,19 +34,22 @@ func Show(opts Options) error {
 	}
 
 	// Get project statistics
-	stats, err := getProjectStats(cfg.BaseDir, opts.DetailLevel != "minimal")
+	level := cfg.Status.Level
+	stats, err := getProjectStats(cfg.BaseDir, level != "minimal")
 	if err != nil {
 		return fmt.Errorf("failed to get project statistics: %w", err)
 	}
 
 	// Display status based on format and detail level
-	switch opts.Format {
+	switch cfg.Status.Format {
 	case "json":
-		return outputStatusJSON(repo, stats, opts.DetailLevel)
+		return outputStatusJSON(repo, stats, level)
 	case "markdown":
-		return outputStatusMarkdown(repo, stats, opts.DetailLevel)
-	default: // text
-		return outputStatusText(repo, stats, opts.DetailLevel)
+		return outputStatusMarkdown(repo, stats, level)
+	case "text":
+		return outputStatusText(repo, stats, level)
+	default:
+		return fmt.Errorf("unknown output format: %s", cfg.Status.Format)
 	}
 }
 

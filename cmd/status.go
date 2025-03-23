@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/status"
 	"github.com/spf13/cobra"
 )
@@ -19,21 +20,15 @@ func init() {
 
 The level of detail and output format can be customized.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Get flag values
-			detail, _ := cmd.Flags().GetString("detail")
-			format, _ := cmd.Flags().GetString("format")
-
 			// Show project status
-			return status.Show(status.Options{
-				DetailLevel: detail,
-				Format:      format,
-			})
+			return status.Show()
 		},
 	}
 
 	// Add flags
-	statusCmd.Flags().StringP("detail", "d", "normal", "Level of detail (minimal, normal, full)")
-	statusCmd.Flags().StringP("format", "f", "text", "Output format (text, json, markdown)")
+	cfg := config.GetConfigPointer()
+	statusCmd.Flags().StringVarP(&cfg.Status.Level, "level", "l", "normal", "Level of detail (minimal, normal, full)")
+	statusCmd.Flags().StringVarP(&cfg.Status.Format, "format", "f", "text", "Output format (text, json, markdown)")
 
 	rootCmd.AddCommand(statusCmd)
 }

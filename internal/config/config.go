@@ -20,6 +20,11 @@ type Config struct {
 		StderrFile    string `toml:"stderr_file"`
 	} `toml:"run"`
 
+	Status struct {
+		Level  string `toml:"level"`
+		Format string `toml:"format"`
+	} `toml:"status"`
+
 	Archive struct {
 		Format      string `toml:"format"`
 		Destination string `toml:"destination"`
@@ -39,6 +44,11 @@ type config struct {
 		StderrFile    *string `toml:"stderr_file"`
 	} `toml:"run"`
 
+	Status *struct {
+		Level  *string `toml:"level"`
+		Format *string `toml:"format"`
+	} `toml:"status"`
+
 	Archive *struct {
 		Format      *string `toml:"format"`
 		Destination *string `toml:"destination"`
@@ -56,6 +66,10 @@ cleanup_on_fail = false
 no_pushd = false
 stdout_file = "stdout.log"
 stderr_file = "stderr.log"
+
+[status]
+level = "normal"
+format = "text"
 
 [archive]
 format = "tar.gz"
@@ -136,6 +150,15 @@ func mergeConfig(dst *Config, src config) {
 		}
 		if src.Run.StderrFile != nil {
 			dst.Run.StderrFile = *src.Run.StderrFile
+		}
+	}
+
+	if src.Status != nil {
+		if src.Status.Level != nil {
+			dst.Status.Level = *src.Status.Level
+		}
+		if src.Status.Format != nil {
+			dst.Status.Format = *src.Status.Format
 		}
 	}
 
