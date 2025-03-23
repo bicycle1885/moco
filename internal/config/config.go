@@ -21,6 +21,17 @@ type Config struct {
 		StderrFile    string `toml:"stderr_file"`
 	} `toml:"run"`
 
+	List struct {
+		Format  string `toml:"format"`
+		SortBy  string `toml:"sort_by"`
+		Reverse bool   `toml:"reverse"`
+		Branch  string `toml:"branch"`
+		Status  string `toml:"status"`
+		Since   string `toml:"since"`
+		Command string `toml:"command"`
+		Limit   int    `toml:"limit"`
+	} `toml:"list"`
+
 	Status struct {
 		Level  string `toml:"level"`
 		Format string `toml:"format"`
@@ -49,6 +60,17 @@ type config struct {
 		StderrFile    *string `toml:"stderr_file"`
 	} `toml:"run"`
 
+	List *struct {
+		Format  *string `toml:"format"`
+		SortBy  *string `toml:"sort_by"`
+		Reverse *bool   `toml:"reverse"`
+		Branch  *string `toml:"branch"`
+		Status  *string `toml:"status"`
+		Since   *string `toml:"since"`
+		Command *string `toml:"command"`
+		Limit   *int    `toml:"limit"`
+	} `toml:"list"`
+
 	Status *struct {
 		Level  *string `toml:"level"`
 		Format *string `toml:"format"`
@@ -75,6 +97,16 @@ cleanup_on_fail = false
 no_pushd = false
 stdout_file = "stdout.log"
 stderr_file = "stderr.log"
+
+[list]
+format = "table"
+sort_by = "date"
+reverse = false
+branch = ""
+status = ""
+since = ""
+command = ""
+limit = 0
 
 [status]
 level = "normal"
@@ -167,6 +199,33 @@ func mergeConfig(dst *Config, src config) {
 		}
 		if src.Run.StderrFile != nil {
 			dst.Run.StderrFile = *src.Run.StderrFile
+		}
+	}
+
+	if src.List != nil {
+		if src.List.Format != nil {
+			dst.List.Format = *src.List.Format
+		}
+		if src.List.SortBy != nil {
+			dst.List.SortBy = *src.List.SortBy
+		}
+		if src.List.Reverse != nil {
+			dst.List.Reverse = *src.List.Reverse
+		}
+		if src.List.Branch != nil {
+			dst.List.Branch = *src.List.Branch
+		}
+		if src.List.Status != nil {
+			dst.List.Status = *src.List.Status
+		}
+		if src.List.Since != nil {
+			dst.List.Since = *src.List.Since
+		}
+		if src.List.Command != nil {
+			dst.List.Command = *src.List.Command
+		}
+		if src.List.Limit != nil {
+			dst.List.Limit = *src.List.Limit
 		}
 	}
 

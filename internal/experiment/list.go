@@ -18,20 +18,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// ListOptions defines filtering and display options
-type ListOptions struct {
-	Format  string // Output format (table, json, csv)
-	SortBy  string // Sort field (date, branch, status, duration)
-	Reverse bool   // Reverse sort order
-	Branch  string // Filter by branch name
-	Status  string // Filter by status (success, failure, running)
-	Since   string // Filter by date (e.g., "7d" for last 7 days)
-	Command string // Filter by command pattern
-	Limit   int    // Limit number of results
-}
-
 // List displays and filters runs
-func List(opts ListOptions) error {
+func List() error {
 	// Get config
 	cfg := config.GetConfig()
 
@@ -47,7 +35,7 @@ func List(opts ListOptions) error {
 	}
 
 	// Apply filters
-	filtered, err := filterRuns(runs, opts)
+	filtered, err := filterRuns(runs, cfg)
 	if err != nil {
 		return fmt.Errorf("failed to apply filters: %w", err)
 	}
@@ -58,21 +46,23 @@ func List(opts ListOptions) error {
 	}
 
 	// Sort runs
-	sortRuns(filtered, opts.SortBy, opts.Reverse)
+	sortRuns(filtered, cfg.List.SortBy, cfg.List.Reverse)
 
 	// Apply limit if specified
-	if opts.Limit > 0 && opts.Limit < len(filtered) {
-		filtered = filtered[:opts.Limit]
+	if cfg.List.Limit > 0 && cfg.List.Limit < len(filtered) {
+		filtered = filtered[:cfg.List.Limit]
 	}
 
 	// Output in the requested format
-	switch opts.Format {
+	switch cfg.List.Format {
 	case "json":
 		return outputJSON(filtered)
 	case "csv":
 		return outputCSV(filtered)
-	default: // table
+	case "table":
 		return outputTable(filtered)
+	default:
+		return fmt.Errorf("invalid output format: %s", cfg.List.Format)
 	}
 }
 
@@ -125,13 +115,13 @@ func findRuns(baseDir string) ([]utils.RunInfo, error) {
 }
 
 // filterRuns applies filters to run results
-func filterRuns(runs []utils.RunInfo, opts ListOptions) ([]utils.RunInfo, error) {
+func filterRuns(runs []utils.RunInfo, cfg config.Config) ([]utils.RunInfo, error) {
 	var filtered []utils.RunInfo
 
 	// Parse 'since' filter if provided
 	var sinceTime time.Time
-	if opts.Since != "" {
-		duration, err := parseDuration(opts.Since)
+	if cfg.List.Since != "" {
+		duration, err := parseDuration(cfg.List.Since)
 		if err != nil {
 			return nil, fmt.Errorf("invalid 'since' format: %w", err)
 		}
@@ -140,9 +130,9 @@ func filterRuns(runs []utils.RunInfo, opts ListOptions) ([]utils.RunInfo, error)
 
 	// Compile command regex if provided
 	var commandRegex *regexp.Regexp
-	if opts.Command != "" {
+	if cfg.List.Command != "" {
 		var err error
-		commandRegex, err = regexp.Compile(opts.Command)
+		commandRegex, err = regexp.Compile(cfg.List.Command)
 		if err != nil {
 			return nil, fmt.Errorf("invalid command pattern: %w", err)
 		}
@@ -151,19 +141,19 @@ func filterRuns(runs []utils.RunInfo, opts ListOptions) ([]utils.RunInfo, error)
 	// Filter each run
 	for _, run := range runs {
 		// Filter by branch
-		if opts.Branch != "" && !strings.Contains(run.Branch, opts.Branch) {
+		if cfg.List.Branch != "" && !strings.Contains(run.Branch, cfg.List.Branch) {
 			continue
 		}
 
 		// Filter by status
-		if opts.Status != "" {
-			if opts.Status == "success" && (run.IsRunning || run.ExitStatus != 0) {
+		if cfg.List.Status != "" {
+			if cfg.List.Status == "success" && (run.IsRunning || run.ExitStatus != 0) {
 				continue
 			}
-			if opts.Status == "failure" && (run.IsRunning || run.ExitStatus == 0) {
+			if cfg.List.Status == "failure" && (run.IsRunning || run.ExitStatus == 0) {
 				continue
 			}
-			if opts.Status == "running" && !run.IsRunning {
+			if cfg.List.Status == "running" && !run.IsRunning {
 				continue
 			}
 		}

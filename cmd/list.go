@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/experiment"
 	"github.com/spf13/cobra"
 )
@@ -16,39 +17,21 @@ This command allows you to browse, search, and filter past experiments with
 various criteria such as branch name, status, date, and command pattern.
 Results can be sorted and formatted in different ways for easy analysis.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Get flag values
-			format, _ := cmd.Flags().GetString("format")
-			sortBy, _ := cmd.Flags().GetString("sort")
-			reverse, _ := cmd.Flags().GetBool("reverse")
-			branch, _ := cmd.Flags().GetString("branch")
-			status, _ := cmd.Flags().GetString("status")
-			since, _ := cmd.Flags().GetString("since")
-			command, _ := cmd.Flags().GetString("command")
-			limit, _ := cmd.Flags().GetInt("limit")
-
-			// List experiments with provided options
-			return experiment.List(experiment.ListOptions{
-				Format:  format,
-				SortBy:  sortBy,
-				Reverse: reverse,
-				Branch:  branch,
-				Status:  status,
-				Since:   since,
-				Command: command,
-				Limit:   limit,
-			})
+			// List experiments
+			return experiment.List()
 		},
 	}
 
 	// Add flags
-	listCmd.Flags().StringP("format", "f", "table", "Output format (table, json, csv)")
-	listCmd.Flags().StringP("sort", "s", "date", "Sort by (date, branch, status, duration)")
-	listCmd.Flags().BoolP("reverse", "r", false, "Reverse sort order")
-	listCmd.Flags().StringP("branch", "b", "", "Filter by branch name")
-	listCmd.Flags().String("status", "", "Filter by status (success, failure, running)")
-	listCmd.Flags().String("since", "", "Filter by date (e.g., '7d' for last 7 days)")
-	listCmd.Flags().StringP("command", "c", "", "Filter by command pattern (regex)")
-	listCmd.Flags().IntP("limit", "n", 0, "Limit number of results (0 = no limit)")
+	cfg := config.GetConfigPointer()
+	listCmd.Flags().StringVarP(&cfg.List.Format, "format", "f", "", "Output format (table, json, csv)")
+	listCmd.Flags().StringVarP(&cfg.List.SortBy, "sort", "s", "", "Sort by (date, branch, status, duration)")
+	listCmd.Flags().BoolVarP(&cfg.List.Reverse, "reverse", "r", false, "Reverse sort order")
+	listCmd.Flags().StringVarP(&cfg.List.Branch, "branch", "b", "", "Filter by branch name")
+	listCmd.Flags().StringVar(&cfg.List.Status, "status", "", "Filter by status (success, failure, running)")
+	listCmd.Flags().StringVar(&cfg.List.Since, "since", "", "Filter by date (e.g., '7d' for last 7 days)")
+	listCmd.Flags().StringVarP(&cfg.List.Command, "command", "c", "", "Filter by command pattern (regex)")
+	listCmd.Flags().IntVarP(&cfg.List.Limit, "limit", "n", 0, "Limit number of results (0 = no limit)")
 
 	rootCmd.AddCommand(listCmd)
 }
