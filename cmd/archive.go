@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/bicycle1885/moco/internal/archive"
+	"github.com/bicycle1885/moco/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -21,33 +22,25 @@ or use the filtering options to archive experiments based on criteria.
 An archive index is maintained for easy reference to archived experiments.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Get flag values
-			olderThan, _ := cmd.Flags().GetString("older-than")
-			status, _ := cmd.Flags().GetString("status")
-			format, _ := cmd.Flags().GetString("format")
-			destination, _ := cmd.Flags().GetString("destination")
-			delete, _ := cmd.Flags().GetBool("delete")
-			dryRun, _ := cmd.Flags().GetBool("dry-run")
-
-			// Archive experiments with provided options
-			return archive.Run(args, archive.Options{
-				OlderThan:   olderThan,
-				Status:      status,
-				Format:      format,
-				Destination: destination,
-				Delete:      delete,
-				DryRun:      dryRun,
-			})
+			// Archive experiments using config values
+			return archive.Run(args)
 		},
 	}
 
 	// Add flags
-	archiveCmd.Flags().StringP("older-than", "o", "", "Archive experiments older than duration (e.g., '30d')")
-	archiveCmd.Flags().StringP("status", "s", "", "Archive by status (success, failure, running, all)")
-	archiveCmd.Flags().StringP("format", "f", "", "Archive format (zip, tar.gz)")
-	archiveCmd.Flags().StringP("destination", "d", "archives", "Archive destination directory")
-	archiveCmd.Flags().Bool("delete", false, "Remove original directories after archiving")
-	archiveCmd.Flags().Bool("dry-run", false, "Show what would be archived without executing")
+	cfg := config.GetConfigPointer()
+	archiveCmd.Flags().StringVarP(&cfg.Archive.OlderThan, "older-than", "o", "",
+		"Archive experiments older than duration (e.g., '30d')")
+	archiveCmd.Flags().StringVarP(&cfg.Archive.Status, "status", "s", "",
+		"Archive by status (success, failure, running, all)")
+	archiveCmd.Flags().StringVarP(&cfg.Archive.Format, "format", "f", "",
+		"Archive format (zip, tar.gz)")
+	archiveCmd.Flags().StringVarP(&cfg.Archive.To, "to", "t", "",
+		"Archive destination directory")
+	archiveCmd.Flags().BoolVar(&cfg.Archive.Delete, "delete", false,
+		"Remove original directories after archiving")
+	archiveCmd.Flags().BoolVar(&cfg.Archive.DryRun, "dry-run", false,
+		"Show what would be archived without executing")
 
 	rootCmd.AddCommand(archiveCmd)
 }

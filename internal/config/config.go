@@ -42,8 +42,12 @@ type Config struct {
 	} `toml:"config"`
 
 	Archive struct {
-		Format      string `toml:"format"`
-		Destination string `toml:"destination"`
+		Format    string `toml:"format"`
+		To        string `toml:"to"`
+		OlderThan string `toml:"older_than"`
+		Status    string `toml:"status"`
+		Delete    bool   `toml:"delete"`
+		DryRun    bool   `toml:"dry_run"`
 	} `toml:"archive"`
 }
 
@@ -81,8 +85,12 @@ type config struct {
 	} `toml:"config"`
 
 	Archive *struct {
-		Format      *string `toml:"format"`
-		Destination *string `toml:"destination"`
+		Format    *string `toml:"format"`
+		To        *string `toml:"to"`
+		OlderThan *string `toml:"older_than"`
+		Status    *string `toml:"status"`
+		Delete    *bool   `toml:"delete"`
+		DryRun    *bool   `toml:"dry_run"`
 	} `toml:"archive"`
 }
 
@@ -117,7 +125,11 @@ default = false
 
 [archive]
 format = "tar.gz"
-destination = "archives"
+to = "archives"
+older_than = ""
+status = ""
+delete = false
+dry_run = false
 `
 
 var globalConfig Config
@@ -248,8 +260,20 @@ func mergeConfig(dst *Config, src config) {
 		if src.Archive.Format != nil {
 			dst.Archive.Format = *src.Archive.Format
 		}
-		if src.Archive.Destination != nil {
-			dst.Archive.Destination = *src.Archive.Destination
+		if src.Archive.To != nil {
+			dst.Archive.To = *src.Archive.To
+		}
+		if src.Archive.OlderThan != nil {
+			dst.Archive.OlderThan = *src.Archive.OlderThan
+		}
+		if src.Archive.Status != nil {
+			dst.Archive.Status = *src.Archive.Status
+		}
+		if src.Archive.Delete != nil {
+			dst.Archive.Delete = *src.Archive.Delete
+		}
+		if src.Archive.DryRun != nil {
+			dst.Archive.DryRun = *src.Archive.DryRun
 		}
 	}
 }

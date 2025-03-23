@@ -18,34 +18,21 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// Options defines archiving options
-type Options struct {
-	OlderThan   string // Archive experiments older than duration (e.g., "30d")
-	Status      string // Filter by status (success, failure, all)
-	Format      string // Archive format (zip, tar.gz)
-	Destination string // Archive destination directory
-	Delete      bool   // Delete after archiving
-	DryRun      bool   // Show what would be archived
-}
-
 // Run archives experiments
-func Run(runs []string, opts Options) error {
+func Run(runs []string) error {
 	// Get config
 	cfg := config.GetConfig()
 
 	// Validate format
-	if opts.Format == "" {
-		opts.Format = cfg.Archive.Format
-	}
-	if opts.Format != "tar.gz" && opts.Format != "zip" {
-		return fmt.Errorf("unsupported archive format: %s", opts.Format)
+	if cfg.Archive.Format != "tar.gz" && cfg.Archive.Format != "zip" {
+		return fmt.Errorf("unsupported archive format: %s", cfg.Archive.Format)
 	}
 
 	// Parse olderThan if provided
 	var cutoff time.Time
-	if opts.OlderThan != "" {
+	if cfg.Archive.OlderThan != "" {
 		var err error
-		cutoff, err = parseCutoff(opts.OlderThan)
+		cutoff, err = parseCutoff(cfg.Archive.OlderThan)
 		if err != nil {
 			return fmt.Errorf("invalid olderThan format: %w", err)
 		}
@@ -55,7 +42,7 @@ func Run(runs []string, opts Options) error {
 	}
 
 	// Filter runs to archive
-	runInfos := filterRunsToArchive(runs, cutoff, opts.Status)
+	runInfos := filterRunsToArchive(runs, cutoff, cfg.Archive.Status)
 	if len(runInfos) == 0 {
 		return fmt.Errorf("no runs found matching the criteria")
 	}
@@ -72,7 +59,7 @@ func Run(runs []string, opts Options) error {
 		log.Infof("  • %s - %s", runInfo.Directory, status)
 	}
 
-	if opts.DryRun {
+	if cfg.Archive.DryRun {
 		log.Info("Dry run completed, no files were archived")
 		return nil
 	}
@@ -84,7 +71,7 @@ func Run(runs []string, opts Options) error {
 	}
 
 	// Ensure destination directory
-	destDir := opts.Destination
+	destDir := cfg.Archive.To
 	if destDir == "" {
 		destDir = "archives"
 	}
@@ -97,14 +84,14 @@ func Run(runs []string, opts Options) error {
 	for _, runInfo := range runInfos {
 		runDir := runInfo.Directory
 		dirName := filepath.Base(filepath.Clean(runDir))
-		archivePath := filepath.Join(destDir, dirName+"."+opts.Format)
+		archivePath := filepath.Join(destDir, dirName+"."+cfg.Archive.Format)
 		log.Infof("Archiving %s to %s", runDir, archivePath)
-		if err := archiveDirectory(runDir, archivePath, opts.Format); err != nil {
+		if err := archiveDirectory(runDir, archivePath, cfg.Archive.Format); err != nil {
 			return fmt.Errorf("failed to archive %s: %w", runDir, err)
 		}
 
 		// Delete original if requested
-		if opts.Delete {
+		if cfg.Archive.Delete {
 			log.Infof("Deleting original directory %s", runDir)
 			if err := os.RemoveAll(runDir); err != nil {
 				return fmt.Errorf("failed to delete %s: %w", runDir, err)

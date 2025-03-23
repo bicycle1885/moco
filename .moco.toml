@@ -9,10 +9,27 @@ no_pushd = false
 stdout_file = "stdout.log"
 stderr_file = "stderr.log"
 
+[list]
+format = "table"
+sort_by = "date"
+reverse = false
+branch = ""
+status = ""
+since = ""
+command = ""
+limit = 0
+
 [status]
 level = "normal"
 format = "text"
 
+[config]
+default = false
+
 [archive]
 format = "tar.gz"
-destination = "archives"
+to = "archives"
+older_than = ""
+status = ""
+delete = false
+dry_run = false
