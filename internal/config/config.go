@@ -9,17 +9,15 @@ import (
 
 // Config holds the application configuration
 type Config struct {
-	Paths struct {
-		BaseDir     string `toml:"base_dir"`
-		SummaryFile string `toml:"summary_file"`
-		StdoutFile  string `toml:"stdout_file"`
-		StderrFile  string `toml:"stderr_file"`
-	} `toml:"paths"`
+	BaseDir     string `toml:"base_dir"`
+	SummaryFile string `toml:"summary_file"`
 
 	Run struct {
-		Force         bool `toml:"force"`
-		CleanupOnFail bool `toml:"cleanup_on_fail"`
-		NoPushd       bool `toml:"no_pushd"`
+		Force         bool   `toml:"force"`
+		CleanupOnFail bool   `toml:"cleanup_on_fail"`
+		NoPushd       bool   `toml:"no_pushd"`
+		StdoutFile    string `toml:"stdout_file"`
+		StderrFile    string `toml:"stderr_file"`
 	} `toml:"run"`
 
 	Archive struct {
@@ -30,17 +28,15 @@ type Config struct {
 
 // temprary struct for toml unmarshal to check if the value is nil
 type config struct {
-	Paths *struct {
-		BaseDir     *string `toml:"base_dir"`
-		SummaryFile *string `toml:"summary_file"`
-		StdoutFile  *string `toml:"stdout_file"`
-		StderrFile  *string `toml:"stderr_file"`
-	} `toml:"paths"`
+	BaseDir     *string `toml:"base_dir"`
+	SummaryFile *string `toml:"summary_file"`
 
 	Run *struct {
-		Force         *bool `toml:"force"`
-		CleanupOnFail *bool `toml:"cleanup_on_fail"`
-		NoPushd       *bool `toml:"no_pushd"`
+		Force         *bool   `toml:"force"`
+		CleanupOnFail *bool   `toml:"cleanup_on_fail"`
+		NoPushd       *bool   `toml:"no_pushd"`
+		StdoutFile    *string `toml:"stdout_file"`
+		StderrFile    *string `toml:"stderr_file"`
 	} `toml:"run"`
 
 	Archive *struct {
@@ -50,16 +46,16 @@ type config struct {
 }
 
 const defaultConfig = `
-[paths]
+# default configuration
 base_dir = "runs"
 summary_file = "summary.md"
-stdout_file = "stdout.log"
-stderr_file = "stderr.log"
 
 [run]
 force = false
 cleanup_on_fail = false
 no_pushd = false
+stdout_file = "stdout.log"
+stderr_file = "stderr.log"
 
 [archive]
 format = "tar.gz"
@@ -118,19 +114,11 @@ func GetDefaultConfig() Config {
 
 // mergeConfig merges the src configuration into the dst configuration
 func mergeConfig(dst *Config, src config) {
-	if src.Paths != nil {
-		if src.Paths.BaseDir != nil {
-			dst.Paths.BaseDir = *src.Paths.BaseDir
-		}
-		if src.Paths.SummaryFile != nil {
-			dst.Paths.SummaryFile = *src.Paths.SummaryFile
-		}
-		if src.Paths.StdoutFile != nil {
-			dst.Paths.StdoutFile = *src.Paths.StdoutFile
-		}
-		if src.Paths.StderrFile != nil {
-			dst.Paths.StderrFile = *src.Paths.StderrFile
-		}
+	if src.BaseDir != nil {
+		dst.BaseDir = *src.BaseDir
+	}
+	if src.SummaryFile != nil {
+		dst.SummaryFile = *src.SummaryFile
 	}
 
 	if src.Run != nil {
@@ -142,6 +130,12 @@ func mergeConfig(dst *Config, src config) {
 		}
 		if src.Run.NoPushd != nil {
 			dst.Run.NoPushd = *src.Run.NoPushd
+		}
+		if src.Run.StdoutFile != nil {
+			dst.Run.StdoutFile = *src.Run.StdoutFile
+		}
+		if src.Run.StderrFile != nil {
+			dst.Run.StderrFile = *src.Run.StderrFile
 		}
 	}
 

@@ -36,7 +36,7 @@ func List(opts ListOptions) error {
 	cfg := config.GetConfig()
 
 	// Find all runs
-	runs, err := findRuns(cfg.Paths.BaseDir)
+	runs, err := findRuns(cfg.BaseDir)
 	if err != nil {
 		return fmt.Errorf("failed to find runs: %w", err)
 	}
@@ -111,7 +111,7 @@ func findRuns(baseDir string) ([]utils.RunInfo, error) {
 		}
 
 		// Parse summary file
-		summaryPath := filepath.Join(baseDir, name, cfg.Paths.SummaryFile)
+		summaryPath := filepath.Join(baseDir, name, cfg.SummaryFile)
 		runInfo, err := utils.ParseRunInfo(summaryPath)
 		if err != nil {
 			// TODO: Log error and continue

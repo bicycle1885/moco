@@ -34,7 +34,7 @@ func Run(commands []string) error {
 	}
 
 	// Create experiment directory with millisecond timestamp
-	baseDir := cfg.Paths.BaseDir
+	baseDir := cfg.BaseDir
 	if baseDir == "" {
 		return fmt.Errorf("base directory not set in configuration")
 	}
@@ -60,14 +60,14 @@ func Run(commands []string) error {
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 
 	// Write metadata to summary file
-	summaryPath := filepath.Join(expDir, cfg.Paths.SummaryFile)
+	summaryPath := filepath.Join(expDir, cfg.SummaryFile)
 	if err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, commands); err != nil {
 		return fmt.Errorf("failed to write summary: %w", err)
 	}
 
 	// Set up output files
-	stdoutPath := filepath.Join(expDir, cfg.Paths.StdoutFile)
-	stderrPath := filepath.Join(expDir, cfg.Paths.StderrFile)
+	stdoutPath := filepath.Join(expDir, cfg.Run.StdoutFile)
+	stderrPath := filepath.Join(expDir, cfg.Run.StderrFile)
 
 	// Execute command
 	cmd := exec.Command(commands[0], commands[1:]...)

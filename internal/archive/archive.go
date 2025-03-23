@@ -150,7 +150,7 @@ func filterRunsToArchive(runDirs []string, cutoff time.Time, status string) []ut
 		}
 
 		// Parse summary file to check if it's finished and the exit status
-		summaryPath := filepath.Join(runDir, cfg.Paths.SummaryFile)
+		summaryPath := filepath.Join(runDir, cfg.SummaryFile)
 		runInfo, err := utils.ParseRunInfo(summaryPath)
 		if err != nil {
 			log.Warnf("Failed to parse summary file: %v", err)

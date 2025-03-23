@@ -40,7 +40,7 @@ func Show(opts Options) error {
 	}
 
 	// Get project statistics
-	stats, err := getProjectStats(cfg.Paths.BaseDir, opts.DetailLevel != "minimal")
+	stats, err := getProjectStats(cfg.BaseDir, opts.DetailLevel != "minimal")
 	if err != nil {
 		return fmt.Errorf("failed to get project statistics: %w", err)
 	}
@@ -106,7 +106,7 @@ func getProjectStats(baseDir string, includeRecentRuns bool) (ProjectStats, erro
 		stats.TotalRuns++
 
 		// Parse summary file for status
-		summaryPath := filepath.Join(path, cfg.Paths.SummaryFile)
+		summaryPath := filepath.Join(path, cfg.SummaryFile)
 		runInfo, err := utils.ParseRunInfo(summaryPath)
 		if err != nil {
 			// TODO: fix this
