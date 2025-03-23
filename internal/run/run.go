@@ -17,7 +17,7 @@ import (
 )
 
 // Run executes a command with experiment tracking
-func Run(commands []string) error {
+func Main(commands []string) error {
 	// Get config
 	cfg := config.Get()
 

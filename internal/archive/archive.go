@@ -19,7 +19,7 @@ import (
 )
 
 // Run archives experiments
-func Run(runs []string) error {
+func Main(runs []string) error {
 	// Get config
 	cfg := config.Get()
 

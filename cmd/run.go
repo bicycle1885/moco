@@ -28,7 +28,7 @@ and git commit hash to ensure traceability.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Execute the command with experiment tracking
-			return run.Run(args)
+			return run.Main(args)
 		},
 	}
 

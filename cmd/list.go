@@ -18,7 +18,7 @@ various criteria such as branch name, status, date, and command pattern.
 Results can be sorted and formatted in different ways for easy analysis.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// List experiments
-			return list.List()
+			return list.Main()
 		},
 	}
 

@@ -131,6 +131,12 @@ dry_run = false
 
 var globalConfig Config
 
+func Main(config Config) error {
+	b, _ := toml.Marshal(config)
+	fmt.Print(string(b))
+	return nil
+}
+
 // Init loads configuration from files
 func Init() error {
 	// Set defaults
@@ -177,11 +183,6 @@ func GetDefault() Config {
 	result := Config{}
 	merge(&result, config)
 	return result
-}
-
-func Show(config Config) {
-	b, _ := toml.Marshal(config)
-	fmt.Print(string(b))
 }
 
 // merge merges the src configuration into the dst configuration

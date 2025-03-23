@@ -19,7 +19,7 @@ import (
 )
 
 // List displays and filters runs
-func List() error {
+func Main() error {
 	// Get config
 	cfg := config.Get()
 

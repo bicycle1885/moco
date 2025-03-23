@@ -21,7 +21,7 @@ func init() {
 The level of detail and output format can be customized.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Show project status
-			return status.Show()
+			return status.Main()
 		},
 	}
 

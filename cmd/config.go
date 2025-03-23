@@ -15,8 +15,7 @@ func init() {
 			if cfg.Config.Default {
 				cfg = config.GetDefault()
 			}
-			config.Show(cfg)
-			return nil
+			return config.Main(cfg)
 		},
 	}
 

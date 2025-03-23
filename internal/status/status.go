@@ -27,7 +27,7 @@ type ProjectStats struct {
 const maxRecentRuns = 5
 
 // Show displays project status
-func Show() error {
+func Main() error {
 	// Get config and repository status
 	cfg := config.Get()
 	repo, err := utils.GetRepoStatus()

@@ -23,7 +23,7 @@ An archive index is maintained for easy reference to archived experiments.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Archive experiments using config values
-			return archive.Run(args)
+			return archive.Main(args)
 		},
 	}
 
