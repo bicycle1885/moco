@@ -12,6 +12,7 @@ import (
 	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/git"
 	"github.com/bicycle1885/moco/internal/utils"
+	"github.com/charmbracelet/log"
 )
 
 // ProjectStats contains project statistics
@@ -95,6 +96,7 @@ func getProjectStats(baseDir string) (ProjectStats, error) {
 		summaryPath := filepath.Join(path, cfg.SummaryFile)
 		runInfo, err := utils.ParseRunInfo(summaryPath)
 		if err != nil {
+			log.Warnf("Failed to parse summary file: %v", err)
 			return nil
 		}
 
@@ -191,7 +193,7 @@ func outputStatusText(repo git.RepoStatus, stats ProjectStats, detailLevel strin
 		for _, run := range stats.RecentRuns[:min(maxRecentRuns, len(stats.RecentRuns))] {
 			status := statusString(run)
 			fmt.Printf("  • %s\n    Status: %s\n    Command: %s\n    Duration: %s\n",
-				run.Directory, status, run.Command, run.Duration)
+				run.Directory, status, run.Command, run.Duration())
 		}
 	}
 

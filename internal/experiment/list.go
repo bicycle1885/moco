@@ -304,18 +304,12 @@ func outputTable(runs []utils.RunInfo) error {
 			}
 		}
 
-		// Format duration
-		duration := run.Duration
-		if duration == "" {
-			duration = "-"
-		}
-
 		// Write the row
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			run.Directory,
 			run.Branch,
 			status,
-			duration,
+			run.Duration(),
 			run.Command,
 		)
 	}
@@ -375,12 +369,6 @@ func outputCSV(runs []utils.RunInfo) error {
 		// Format timestamp
 		timestamp := run.StartTime.Format("2006-01-02 15:04:05")
 
-		// Format duration
-		duration := run.Duration
-		if duration == "" {
-			duration = "-"
-		}
-
 		// Create the record
 		record := []string{
 			run.Directory,
@@ -388,7 +376,7 @@ func outputCSV(runs []utils.RunInfo) error {
 			run.Branch,
 			run.CommitHash,
 			status,
-			duration,
+			run.Duration(),
 			run.Command,
 		}
 

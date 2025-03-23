@@ -13,6 +13,10 @@ import (
 	"github.com/bicycle1885/moco/internal/git"
 )
 
+// Timezone is indispensable for correct parsing of timestamps
+// RFC3339: "2006-01-02T15:04:05Z07:00"
+const timestampFormat = time.RFC3339
+
 // RunInfo contains information about a specific run
 type RunInfo struct {
 	Directory   string    `json:"directory"`
@@ -20,12 +24,28 @@ type RunInfo struct {
 	Command     string    `json:"command"`
 	StartTime   time.Time `json:"start_time"`
 	EndTime     time.Time `json:"end_time,omitempty"`
-	Duration    string    `json:"duration,omitempty"`
 	ExitStatus  int       `json:"exit_status"`
 	IsRunning   bool      `json:"is_running"`
 	Branch      string    `json:"branch"`
 	CommitHash  string    `json:"commit_hash"`
 	Interrupted bool      `json:"interrupted"`
+}
+
+// Duration returns a formatted duration of the run
+func (r *RunInfo) Duration() string {
+	var d time.Duration
+
+	// Check if the run is still running
+	if r.IsRunning || r.EndTime.IsZero() {
+		// Calculate duration from start to now
+		d = time.Since(r.StartTime)
+	} else {
+		// Calculate duration from start to end
+		d = r.EndTime.Sub(r.StartTime)
+	}
+
+	// Use the existing formatDuration function
+	return formatDuration(d)
 }
 
 func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo git.RepoStatus, command []string) error {
@@ -67,7 +87,7 @@ func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo git.Repo
 
 	// Metadata
 	b.WriteString("## Metadata\n")
-	fmt.Fprintf(&b, "- **Execution datetime**: %s\n", startTime.Format("2006-01-02T15:04:05"))
+	fmt.Fprintf(&b, "- **Execution datetime**: %s\n", startTime.Format(timestampFormat))
 	fmt.Fprintf(&b, "- **Branch**: `%s`\n", repo.Branch)
 	fmt.Fprintf(&b, "- **Commit hash**: `%s`\n", repo.FullHash)
 	fmt.Fprintf(&b, "- **Command**: `%s`\n", strings.Join(command, " "))
@@ -158,7 +178,7 @@ func WriteSummaryFileEnd(summaryPath string, startTime, endTime time.Time, exitC
 - **Execution finished**: %s
 - **Execution time**: %s
 - **Exit status**: %d
-`, endTime.Format("2006-01-02T15:04:05"), formatDuration(endTime.Sub(startTime)), exitCode)
+`, endTime.Format(timestampFormat), formatDuration(endTime.Sub(startTime)), exitCode)
 
 	if interrupted {
 		results += "- **Terminated by user**\n"
@@ -223,7 +243,7 @@ func ParseRunInfo(summaryPath string) (RunInfo, error) {
 
 		if after, found := strings.CutPrefix(line, "- **Execution datetime**: "); found {
 			// Extract start time
-			startTime, err := parseDateTime(after)
+			startTime, err := time.Parse(timestampFormat, after)
 			if err != nil {
 				return runInfo, fmt.Errorf("failed to parse start time: %w", err)
 			}
@@ -257,14 +277,11 @@ func ParseRunInfo(summaryPath string) (RunInfo, error) {
 			runInfo.ExitStatus = status
 		} else if after, found := strings.CutPrefix(line, "- **Execution finished**: "); found {
 			// Extract end time
-			endTime, err := parseDateTime(after)
+			endTime, err := time.Parse(timestampFormat, after)
 			if err != nil {
 				return runInfo, fmt.Errorf("failed to parse end time: %w", err)
 			}
 			runInfo.EndTime = endTime
-		} else if after, found := strings.CutPrefix(line, "- **Execution time**: "); found {
-			// Extract duration
-			runInfo.Duration = after
 		} else if strings.Contains(line, "**Terminated by user**") {
 			// Check if interrupted
 			runInfo.Interrupted = true
@@ -272,10 +289,6 @@ func ParseRunInfo(summaryPath string) (RunInfo, error) {
 	}
 
 	return runInfo, nil
-}
-
-func parseDateTime(s string) (time.Time, error) {
-	return time.Parse("2006-01-02T15:04:05", s)
 }
 
 // trimBackticks removes backticks from the both ends of a string
