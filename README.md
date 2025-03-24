@@ -32,8 +32,9 @@ cp moco /usr/local/bin/
 
 ### Run an Experiment
 
-```bash
+```
 moco run [command]
+moco r [command]  # Alias
 ```
 
 This will:
@@ -44,14 +45,13 @@ This will:
 
 Options:
 - `-f, --force` - Allow experiments with uncommitted Git changes
-- `-d, --dir` - Specify base directory for experiment output
+- `-d, --base-dir` - Specify base directory for experiment output
 - `-n, --no-pushd` - Execute command in current directory
 - `-c, --cleanup-on-fail` - Remove experiment directory if command fails
-- `--dev` - Development mode (enables --force and --cleanup-on-fail)
 
 ### List Experiments
 
-```bash
+```
 moco list
 moco ls  # Alias
 ```
@@ -68,28 +68,41 @@ Options:
 
 ### Show Project Status
 
-```bash
+```
 moco status
 moco st  # Alias
 ```
 
 Options:
-- `-d, --detail` - Level of detail (minimal, normal, full)
-- `-f, --format` - Output format (text, json, markdown)
+- `-l, --level` - Level of detail (minimal, normal, full)
 
 ### Archive Experiments
 
-```bash
-moco archive
+```
+moco archive [run_directories...]
 ```
 
 Options:
 - `-o, --older-than` - Archive experiments older than duration (e.g., '30d')
 - `-s, --status` - Archive by status (success, failure, running, all)
 - `-f, --format` - Archive format (zip, tar.gz)
-- `-d, --destination` - Archive destination directory
+- `-t, --to` - Archive destination directory
 - `--delete` - Remove original directories after archiving
 - `--dry-run` - Show what would be archived without executing
+
+### Show Configuration
+
+```
+moco config
+moco co  # Alias
+```
+
+This command displays your current configuration settings in TOML format. Use this to:
+- Check what settings are active in your environment
+- Get a template for creating your own configuration file
+
+Options:
+- `--default` - Show the default configuration instead of the current settings
 
 ## Configuration
 
@@ -99,37 +112,52 @@ Example configuration:
 
 ```toml
 # .moco.toml
-
-[paths]
 base_dir = "runs"
 summary_file = "summary.md"
+
+[run]
+force = false
+cleanup_on_fail = false
+no_pushd = false
 stdout_file = "stdout.log"
 stderr_file = "stderr.log"
 
-[run]
-default_force = false
-default_cleanup_on_fail = false
-default_no_pushd = false
+[list]
+format = "table"
+sort_by = "date"
+reverse = false
+branch = ""
+status = ""
+since = ""
+command = ""
+limit = 0
 
-[git]
-require_clean = true
+[status]
+level = "normal"
+
+[config]
+default = false
 
 [archive]
 format = "tar.gz"
-older_than = "30d"
+to = "archives"
+older_than = ""
+status = ""
+delete = false
+dry_run = false
 ```
 
 ## Example Workflow
 
 ```bash
 # Run an experiment
-moco run python train.py --epochs 100 --batch-size 64
+moco run -- julia train.jl --epochs 100 --batch-size 64
 
 # List recent experiments
 moco list --since 7d
 
 # Show detailed status of one experiment
-moco status --detail full
+moco status --level full
 
 # Archive old successful experiments
 moco archive --older-than 30d --status success
