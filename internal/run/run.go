@@ -96,6 +96,8 @@ func Main(commands []string) error {
 	// Start the command
 	log.Infof("Starting command: %s", strings.Join(commands, " "))
 	if err := cmd.Start(); err != nil {
+		// Clean up on failure to avoid leaving empty directories
+		cleanupRun(expDir)
 		return fmt.Errorf("failed to start command: %w", err)
 	}
 
@@ -141,7 +143,6 @@ func Main(commands []string) error {
 	if exitCode == 0 {
 		log.Info("Command finished successfully")
 	} else {
-
 		log.Infof("Command finished with exit code %d", exitCode)
 	}
 
@@ -153,8 +154,7 @@ func Main(commands []string) error {
 
 	// Handle cleanup on failure
 	if exitCode != 0 && cfg.Run.CleanupOnFail {
-		log.Infof("Cleaning up directory: %s", expDir)
-		os.RemoveAll(expDir)
+		cleanupRun(expDir)
 	}
 
 	if exitCode != 0 {
@@ -162,4 +162,10 @@ func Main(commands []string) error {
 	}
 
 	return nil
+}
+
+func cleanupRun(expDir string) {
+	// it is very unlikely that this will fail, so we don't check the error, or should we?
+	log.Infof("Cleaning up directory: %s", expDir)
+	os.RemoveAll(expDir)
 }
