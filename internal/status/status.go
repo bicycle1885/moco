@@ -163,7 +163,7 @@ func outputStatusText(repo utils.RepoStatus, stats ProjectStats, detailLevel str
 	fmt.Printf("  Branch: %s\n", repo.Branch)
 	fmt.Printf("  Commit: %s\n", repo.ShortHash)
 	if repo.IsDirty {
-		fmt.Println("  Status: Dirty (has uncommitted changes)")
+		fmt.Println("  Status: Dirty (has uncommitted changes or untracked files)")
 	} else {
 		fmt.Println("  Status: Clean")
 	}
