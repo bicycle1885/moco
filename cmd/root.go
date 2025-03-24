@@ -12,6 +12,8 @@ var rootCmd = &cobra.Command{
 
 It ensures reproducibility by tracking git repository state, 
 capturing command output, and documenting execution details.`,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 // Execute runs the root command
