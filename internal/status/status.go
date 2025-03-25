@@ -11,6 +11,8 @@ import (
 
 	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/utils"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	"github.com/charmbracelet/log"
 )
 
@@ -176,23 +178,47 @@ func outputStatusText(repo utils.RepoStatus, stats ProjectStats, detailLevel str
 			fmt.Printf("  Author: %s\n", repo.CommitAuthor)
 			fmt.Printf("  Date: %s\n", repo.CommitDate.Format(time.RFC1123))
 		}
-	}
 
-	// Output basic project stats
-	fmt.Println("\nProject Statistics:")
-	fmt.Printf("  Total runs: %d\n", stats.TotalRuns)
-	fmt.Printf("  Success rate: %.1f%% (%d/%d)\n",
-		percentOrZero(stats.SuccessCount, stats.SuccessCount+stats.FailureCount),
-		stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
-	fmt.Printf("  Disk usage: %s\n", formatSize(stats.DiskUsage))
+		// Output basic project stats
+		fmt.Println("\nProject Statistics:")
+		fmt.Printf("  Total runs: %d\n", stats.TotalRuns)
+		fmt.Printf("  Success rate: %.1f%% (%d/%d)\n",
+			percentOrZero(stats.SuccessCount, stats.SuccessCount+stats.FailureCount),
+			stats.SuccessCount, stats.SuccessCount+stats.FailureCount)
+		fmt.Printf("  Disk usage: %s\n", formatSize(stats.DiskUsage))
+	}
 
 	// Show recent runs if requested
 	if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
-		fmt.Println("\nRecent Runs:")
+		cellStyle := lipgloss.NewStyle().Padding(0, 1)
+		headerStyle := cellStyle.Bold(true).Align(lipgloss.Left)
+		t := table.New().
+			// Enable the header border only
+			BorderHeader(true).
+			BorderTop(false).
+			BorderLeft(false).
+			BorderRight(false).
+			BorderBottom(false).
+			BorderRow(false).
+			BorderColumn(false).
+			StyleFunc(func(row, col int) lipgloss.Style {
+				if row == table.HeaderRow {
+					return headerStyle
+				} else if col == 2 {
+					return cellStyle.Align(lipgloss.Right)
+				} else {
+					return cellStyle
+				}
+			}).
+			Headers("Recent Runs", "Status", "Duration", "Command")
+		fmt.Printf("\n")
 		for _, run := range stats.RecentRuns[:min(maxRecentRuns, len(stats.RecentRuns))] {
-			status := statusString(run)
-			fmt.Printf("  • %s\n    Status: %s\n    Command: %s\n    Duration: %s\n",
-				run.Directory, status, run.Command, run.Duration())
+			t.Row(run.Directory, statusString(run), run.Duration(), run.Command)
+		}
+		fmt.Println(t)
+		nRemainingRuns := len(stats.RecentRuns) - maxRecentRuns
+		if nRemainingRuns > 0 {
+			fmt.Printf(" and %d more run(s)\n", nRemainingRuns)
 		}
 	}
 
