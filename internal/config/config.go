@@ -19,6 +19,7 @@ type Config struct {
 		NoPushd       bool   `toml:"no_pushd"`
 		StdoutFile    string `toml:"stdout_file"`
 		StderrFile    string `toml:"stderr_file"`
+		Silent        bool   `toml:"silent"`
 	} `toml:"run"`
 
 	List struct {
@@ -61,6 +62,7 @@ type config struct {
 		NoPushd       *bool   `toml:"no_pushd"`
 		StdoutFile    *string `toml:"stdout_file"`
 		StderrFile    *string `toml:"stderr_file"`
+		Silent        *bool   `toml:"silent"`
 	} `toml:"run"`
 
 	List *struct {
@@ -103,6 +105,7 @@ cleanup_on_fail = false
 no_pushd = false
 stdout_file = "stdout.log"
 stderr_file = "stderr.log"
+silent = false
 
 [list]
 format = "table"
@@ -209,6 +212,9 @@ func merge(dst *Config, src config) {
 		}
 		if src.Run.StderrFile != nil {
 			dst.Run.StderrFile = *src.Run.StderrFile
+		}
+		if src.Run.Silent != nil {
+			dst.Run.Silent = *src.Run.Silent
 		}
 	}
 

@@ -38,6 +38,8 @@ and git commit hash to ensure traceability.`,
 		"Execute command in current directory (don't cd to experiment dir)")
 	runCmd.Flags().BoolVarP(&cfg.Run.CleanupOnFail, "cleanup-on-fail", "c", false,
 		"Remove experiment directory if command fails")
+	runCmd.Flags().BoolVarP(&cfg.Run.Silent, "silent", "s", false,
+		"Suppress command output to stdout/stderr (write only to log files)")
 
 	rootCmd.AddCommand(runCmd)
 }

@@ -48,6 +48,7 @@ Options:
 - `-d, --base-dir` - Specify base directory for experiment output
 - `-n, --no-pushd` - Execute command in current directory
 - `-c, --cleanup-on-fail` - Remove experiment directory if command fails
+- `-s, --silent` - Suppress command output to stdout/stderr (write only to log files)
 
 ### List Experiments
 

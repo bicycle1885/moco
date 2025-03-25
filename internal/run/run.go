@@ -89,9 +89,16 @@ func Main(commands []string) error {
 	}
 	defer stderrFile.Close()
 
-	// Capture outputs while also displaying them
-	cmd.Stdout = io.MultiWriter(os.Stdout, stdoutFile)
-	cmd.Stderr = io.MultiWriter(os.Stderr, stderrFile)
+	// When capturing command output, check the Silent flag
+	if cfg.Run.Silent {
+		// Write output only to files, not to stdout/stderr
+		cmd.Stdout = stdoutFile
+		cmd.Stderr = stderrFile
+	} else {
+		// Standard behavior: write to both files and stdout/stderr
+		cmd.Stdout = io.MultiWriter(os.Stdout, stdoutFile)
+		cmd.Stderr = io.MultiWriter(os.Stderr, stderrFile)
+	}
 
 	// Start the command
 	log.Infof("Starting command: %s", shellescape.QuoteCommand(commands))
