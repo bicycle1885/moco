@@ -96,6 +96,7 @@ func Main(commands []string) error {
 	// Start the command
 	log.Infof("Starting command: %s", strings.Join(commands, " "))
 	if err := cmd.Start(); err != nil {
+		log.Errorf("Failed to start command: %v", err)
 		// Clean up on failure to avoid leaving empty directories
 		cleanupRun(expDir)
 		return fmt.Errorf("failed to start command: %w", err)
