@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"text/tabwriter"
 	"time"
 
 	"github.com/bicycle1885/moco/internal/config"
@@ -282,38 +281,7 @@ func compareTime(a, b time.Time) int {
 
 // outputTable formats and displays runs as a table
 func outputTable(runs []utils.RunInfo) error {
-	// Create a tabwriter for aligned columns
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	defer w.Flush()
-
-	// Write header
-	fmt.Fprintln(w, "DIRECTORY\tBRANCH\tSTATUS\tDURATION\tCOMMAND")
-
-	// Write each run
-	for _, run := range runs {
-		// Format status
-		status := "Running"
-		if !run.IsRunning {
-			if run.ExitStatus == 0 {
-				status = "Success"
-			} else {
-				status = fmt.Sprintf("Failed (%d)", run.ExitStatus)
-				if run.Interrupted {
-					status = "Interrupted"
-				}
-			}
-		}
-
-		// Write the row
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			run.Directory,
-			run.Branch,
-			status,
-			run.Duration(),
-			run.Command,
-		)
-	}
-
+	fmt.Println(utils.RenderRunInfos(runs))
 	return nil
 }
 

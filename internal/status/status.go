@@ -11,8 +11,6 @@ import (
 
 	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/utils"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
 	"github.com/charmbracelet/log"
 )
 
@@ -190,32 +188,8 @@ func outputStatusText(repo utils.RepoStatus, stats ProjectStats, detailLevel str
 
 	// Show recent runs if requested
 	if detailLevel != "minimal" && len(stats.RecentRuns) > 0 {
-		cellStyle := lipgloss.NewStyle().Padding(0, 1)
-		headerStyle := cellStyle.Bold(true).Align(lipgloss.Left)
-		t := table.New().
-			// Enable the header border only
-			BorderHeader(true).
-			BorderTop(false).
-			BorderLeft(false).
-			BorderRight(false).
-			BorderBottom(false).
-			BorderRow(false).
-			BorderColumn(false).
-			StyleFunc(func(row, col int) lipgloss.Style {
-				if row == table.HeaderRow {
-					return headerStyle
-				} else if col == 2 {
-					return cellStyle.Align(lipgloss.Right)
-				} else {
-					return cellStyle
-				}
-			}).
-			Headers("Recent Runs", "Status", "Duration", "Command")
-		fmt.Printf("\n")
-		for _, run := range stats.RecentRuns[:min(maxRecentRuns, len(stats.RecentRuns))] {
-			t.Row(run.Directory, statusString(run), run.Duration(), run.Command)
-		}
-		fmt.Println(t)
+		fmt.Println("\nRecent Runs:")
+		fmt.Println(utils.RenderRunInfos(stats.RecentRuns[:min(maxRecentRuns, len(stats.RecentRuns))]))
 		nRemainingRuns := len(stats.RecentRuns) - maxRecentRuns
 		if nRemainingRuns > 0 {
 			fmt.Printf(" and %d more run(s)\n", nRemainingRuns)
