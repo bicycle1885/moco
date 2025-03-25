@@ -7,10 +7,10 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"strings"
 	"syscall"
 	"time"
 
+	"al.essio.dev/pkg/shellescape"
 	"github.com/bicycle1885/moco/internal/config"
 	"github.com/bicycle1885/moco/internal/utils"
 	"github.com/charmbracelet/log"
@@ -94,7 +94,7 @@ func Main(commands []string) error {
 	cmd.Stderr = io.MultiWriter(os.Stderr, stderrFile)
 
 	// Start the command
-	log.Infof("Starting command: %s", strings.Join(commands, " "))
+	log.Infof("Starting command: %s", shellescape.QuoteCommand(commands))
 	if err := cmd.Start(); err != nil {
 		log.Errorf("Failed to start command: %v", err)
 		// Clean up on failure to avoid leaving empty directories

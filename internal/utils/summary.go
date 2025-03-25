@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"al.essio.dev/pkg/shellescape"
 )
 
 // Timezone is indispensable for correct parsing of timestamps
@@ -88,7 +90,7 @@ func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo RepoStat
 	fmt.Fprintf(&b, "- **Execution datetime**: %s\n", startTime.Format(timestampFormat))
 	fmt.Fprintf(&b, "- **Branch**: `%s`\n", repo.Branch)
 	fmt.Fprintf(&b, "- **Commit hash**: `%s`\n", repo.FullHash)
-	fmt.Fprintf(&b, "- **Command**: `%s`\n", strings.Join(command, " "))
+	fmt.Fprintf(&b, "- **Command**: `%s`\n", shellescape.QuoteCommand(command))
 	fmt.Fprintf(&b, "- **Hostname**: `%s`\n", hostname)
 	fmt.Fprintf(&b, "- **Working directory**: `%s`\n", directry)
 
