@@ -106,7 +106,7 @@ func Main(commands []string) error {
 		log.Errorf("Failed to start command: %v", err)
 		// Clean up on failure to avoid leaving empty directories
 		cleanupRun(expDir)
-		return fmt.Errorf("failed to start command: %w", err)
+		return err
 	}
 
 	// Wait for either command completion or signal
