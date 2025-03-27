@@ -1,5 +1,9 @@
 # Moco: Monitoring & Organizing Computation Outputs
 
+> [!WARNING]
+> This project is under active development.
+> The interface may change significantly.
+
 Moco is a research experiment management tool designed to ensure reproducibility by tracking Git repository state, capturing command outputs, and documenting execution details.
 
 ## Overview
