@@ -60,6 +60,8 @@ func Main() error {
 		return outputCSV(filtered)
 	case "table":
 		return outputTable(filtered)
+	case "plain":
+		return outputPlain(filtered)
 	default:
 		return fmt.Errorf("invalid output format: %s", cfg.List.Format)
 	}
@@ -354,5 +356,12 @@ func outputCSV(runs []utils.RunInfo) error {
 		}
 	}
 
+	return nil
+}
+
+func outputPlain(runs []utils.RunInfo) error {
+	for _, run := range runs {
+		fmt.Println(run.Directory)
+	}
 	return nil
 }
