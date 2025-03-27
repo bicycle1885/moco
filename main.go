@@ -1,23 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/bicycle1885/moco/cmd"
 	"github.com/bicycle1885/moco/internal/config"
+	"github.com/charmbracelet/log"
 )
 
 func main() {
-	// Initialize configuration
 	if err := config.Init(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error initializing configuration: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Failed to intialize configuration: %v", err)
 	}
 
-	// Execute the root command
 	if err := cmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error executing command: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Failed to execute command: %v", err)
 	}
 }
