@@ -206,13 +206,3 @@ func percentOrZero(numerator, denominator int) float64 {
 	}
 	return 100.0 * float64(numerator) / float64(denominator)
 }
-
-func statusString(run utils.RunInfo) string {
-	if run.IsRunning {
-		return "Running"
-	} else if run.ExitStatus == 0 {
-		return "Success"
-	} else {
-		return fmt.Sprintf("Failed (exit: %d)", run.ExitStatus)
-	}
-}
