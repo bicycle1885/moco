@@ -144,26 +144,6 @@ func getSystemInfo() string {
 	return sysInfo.String()
 }
 
-// formatGitStatus converts git status to a string for display
-func formatGitStatus(repo RepoStatus) string {
-	if !repo.IsValid {
-		return "Not a valid git repository"
-	}
-
-	status := fmt.Sprintf("On branch %s\n", repo.Branch)
-	if repo.IsDirty {
-		status += "Changes not staged for commit:\n"
-		status += "  (use \"git add <file>...\" to update what will be committed)\n"
-		status += "  (use \"git restore <file>...\" to discard changes in working directory)\n"
-		status += "\n"
-		status += "        modified:   [uncommitted changes present]\n"
-	} else {
-		status += "nothing to commit, working tree clean\n"
-	}
-
-	return status
-}
-
 func WriteSummaryFileEnd(summaryPath string, startTime, endTime time.Time, exitCode int, interrupted bool) error {
 	// Open the summary file
 	file, err := os.OpenFile(summaryPath, os.O_APPEND|os.O_WRONLY, 0644)
@@ -190,22 +170,6 @@ func WriteSummaryFileEnd(summaryPath string, startTime, endTime time.Time, exitC
 	}
 
 	return nil
-}
-
-// formatDuration formats a duration in a human-readable way (Xh Ym Zs)
-func formatDuration(d time.Duration) string {
-	d = d.Round(time.Second)
-
-	hours := int(d.Hours())
-	minutes := int(d.Minutes()) % 60
-	seconds := int(d.Seconds()) % 60
-
-	if hours > 0 {
-		return fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
-	} else if minutes > 0 {
-		return fmt.Sprintf("%dm %ds", minutes, seconds)
-	}
-	return fmt.Sprintf("%ds", seconds)
 }
 
 // ParseRunInfo extracts info from a summary file
@@ -297,4 +261,20 @@ func trimBackticks(s string) (string, error) {
 		return "", fmt.Errorf("string is not enclosed in backticks")
 	}
 	return s[1 : len(s)-1], nil
+}
+
+// formatDuration formats a duration in a human-readable way (Xh Ym Zs)
+func formatDuration(d time.Duration) string {
+	d = d.Round(time.Second)
+
+	hours := int(d.Hours())
+	minutes := int(d.Minutes()) % 60
+	seconds := int(d.Seconds()) % 60
+
+	if hours > 0 {
+		return fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
+	} else if minutes > 0 {
+		return fmt.Sprintf("%dm %ds", minutes, seconds)
+	}
+	return fmt.Sprintf("%ds", seconds)
 }
