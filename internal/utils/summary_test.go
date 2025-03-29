@@ -22,10 +22,11 @@ func TestWriteSummaryFileInit(t *testing.T) {
 			Branch: "main",
 		}
 		commmand := []string{"sleep", "5"}
+		message := "Test message"
 		exitCode := 0
 		interrupted := false
 		{
-			err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, commmand)
+			err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, commmand, message)
 			assert.NoError(t, err)
 		}
 		{
