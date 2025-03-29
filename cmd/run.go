@@ -40,6 +40,10 @@ and git commit hash to ensure traceability.`,
 		"Remove experiment directory if command fails")
 	runCmd.Flags().BoolVarP(&cfg.Run.Silent, "silent", "s", false,
 		"Suppress command output to stdout/stderr (write only to log files)")
+	runCmd.Flags().StringVarP(&cfg.Run.Message, "message", "m", "",
+		"Get user input for experiment message")
+	runCmd.Flags().BoolVarP(&cfg.Run.PromptMessage, "prompt-message", "p", false,
+		"Prompt for user input for experiment message")
 
 	rootCmd.AddCommand(runCmd)
 }

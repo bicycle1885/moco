@@ -43,6 +43,17 @@ func Main(commands []string) error {
 		return fmt.Errorf("failed to create base directory: %w", err)
 	}
 
+	// Get user input if required (command line message has higher priority)
+	message := ""
+	if cfg.Run.Message != "" {
+		message = cfg.Run.Message
+	} else if cfg.Run.PromptMessage {
+		message, err = getUserInput()
+		if err != nil {
+			return err
+		}
+	}
+
 	// Create unique experiment directory
 	startTime := time.Now()
 	dirName := fmt.Sprintf("%s_%s_%s", startTime.Format("2006-01-02T15:04:05.000"), utils.SanitizeBranchName(repo.Branch), repo.ShortHash)
@@ -60,7 +71,7 @@ func Main(commands []string) error {
 
 	// Write metadata to summary file
 	summaryPath := filepath.Join(expDir, cfg.SummaryFile)
-	if err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, commands); err != nil {
+	if err := utils.WriteSummaryFileInit(summaryPath, startTime, repo, commands, message); err != nil {
 		return fmt.Errorf("failed to write summary: %w", err)
 	}
 
@@ -176,4 +187,34 @@ func cleanupRun(expDir string) {
 	// it is very unlikely that this will fail, so we don't check the error, or should we?
 	log.Infof("Cleaning up directory: %s", expDir)
 	os.RemoveAll(expDir)
+}
+
+// getUserInput prompts the user for input using the configured editor
+func getUserInput() (string, error) {
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vi"
+	}
+
+	tmpfile, err := os.CreateTemp("", "input-*.tmp")
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(tmpfile.Name())
+
+	cmd := exec.Command(editor, tmpfile.Name())
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return "", err
+	}
+
+	content, err := os.ReadFile(tmpfile.Name())
+	if err != nil {
+		return "", err
+	}
+
+	return string(content), nil
 }

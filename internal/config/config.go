@@ -20,6 +20,8 @@ type Config struct {
 		StdoutFile    string `toml:"stdout_file"`
 		StderrFile    string `toml:"stderr_file"`
 		Silent        bool   `toml:"silent"`
+		Message       string `toml:"message"`
+		PromptMessage bool   `toml:"prompt_message"`
 	} `toml:"run"`
 
 	List struct {
@@ -63,6 +65,8 @@ type config struct {
 		StdoutFile    *string `toml:"stdout_file"`
 		StderrFile    *string `toml:"stderr_file"`
 		Silent        *bool   `toml:"silent"`
+		Message       *string `toml:"message"`
+		PromptMessage *bool   `toml:"prompt_message"`
 	} `toml:"run"`
 
 	List *struct {
@@ -106,6 +110,8 @@ no_pushd = false
 stdout_file = "stdout.log"
 stderr_file = "stderr.log"
 silent = false
+message = ""
+prompt_message = false
 
 [list]
 format = "table"
@@ -215,6 +221,12 @@ func merge(dst *Config, src config) {
 		}
 		if src.Run.Silent != nil {
 			dst.Run.Silent = *src.Run.Silent
+		}
+		if src.Run.Message != nil {
+			dst.Run.Message = *src.Run.Message
+		}
+		if src.Run.PromptMessage != nil {
+			dst.Run.PromptMessage = *src.Run.PromptMessage
 		}
 	}
 

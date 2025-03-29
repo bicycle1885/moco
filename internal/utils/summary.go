@@ -48,7 +48,7 @@ func (r *RunInfo) Duration() string {
 	return formatDuration(d)
 }
 
-func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo RepoStatus, command []string) error {
+func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo RepoStatus, command []string, message string) error {
 	// Get hostname
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -84,6 +84,17 @@ func WriteSummaryFileInit(summaryPath string, startTime time.Time, repo RepoStat
 
 	// Header
 	b.WriteString("# Experiment Summary\n\n")
+
+	// Message
+	if message != "" {
+		// Make sure the message ends with a newline
+		if !strings.HasSuffix(message, "\n") {
+			message += "\n"
+		}
+
+		// Add message to the summary with a blank line
+		b.WriteString(message + "\n")
+	}
 
 	// Metadata
 	b.WriteString("## Metadata\n")
