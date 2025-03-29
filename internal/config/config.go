@@ -24,6 +24,10 @@ type Config struct {
 		PromptMessage bool   `toml:"prompt_message"`
 	} `toml:"run"`
 
+	Show struct {
+		Raw bool `toml:"raw"`
+	} `toml:"show"`
+
 	List struct {
 		Format  string `toml:"format"`
 		SortBy  string `toml:"sort_by"`
@@ -69,6 +73,10 @@ type config struct {
 		PromptMessage *bool   `toml:"prompt_message"`
 	} `toml:"run"`
 
+	Show *struct {
+		Raw *bool `toml:"raw"`
+	} `toml:"show"`
+
 	List *struct {
 		Format  *string `toml:"format"`
 		SortBy  *string `toml:"sort_by"`
@@ -112,6 +120,9 @@ stderr_file = "stderr.log"
 silent = false
 message = ""
 prompt_message = false
+
+[show]
+raw = false
 
 [list]
 format = "table"
@@ -227,6 +238,12 @@ func merge(dst *Config, src config) {
 		}
 		if src.Run.PromptMessage != nil {
 			dst.Run.PromptMessage = *src.Run.PromptMessage
+		}
+	}
+
+	if src.Show != nil {
+		if src.Show.Raw != nil {
+			dst.Show.Raw = *src.Show.Raw
 		}
 	}
 
